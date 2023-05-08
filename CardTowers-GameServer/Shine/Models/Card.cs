@@ -1,0 +1,14 @@
+﻿using System;
+using CardTowers_GameServer.Shine.Data;
+
+namespace CardTowers_GameServer.Shine.Models
+{
+    public class Card
+    {
+        public string CardName;
+        public CardPlacementAction PlacementAction;
+    }
+
+    public delegate void CardPlacementAction(Card card, ref GameMap playerBoard);
+}
+
