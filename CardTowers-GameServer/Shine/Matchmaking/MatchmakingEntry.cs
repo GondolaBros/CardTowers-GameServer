@@ -1,5 +1,7 @@
 ﻿using System;
-namespace CardTowers_GameServer.Shine.Data
+using CardTowers_GameServer.Shine.Network;
+
+namespace CardTowers_GameServer.Shine.Matchmaking
 {
     public class MatchmakingEntry
     {

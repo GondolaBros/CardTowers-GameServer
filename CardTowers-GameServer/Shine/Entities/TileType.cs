@@ -1,4 +1,4 @@
-﻿namespace CardTowers_GameServer.Shine.Models
+﻿namespace CardTowers_GameServer.Shine.Entities
 {
     public enum TileType
     {

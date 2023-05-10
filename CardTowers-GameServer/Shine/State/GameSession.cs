@@ -1,11 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using CardTowers_GameServer.Shine.Handlers;
-using CardTowers_GameServer.Shine.Models;
+﻿using System.Diagnostics;
+using CardTowers_GameServer.Shine.Data;
+using CardTowers_GameServer.Shine.Entities;
+using CardTowers_GameServer.Shine.Matchmaking;
 using CardTowers_GameServer.Shine.Util;
 
-namespace CardTowers_GameServer.Shine.Data
+namespace CardTowers_GameServer.Shine.State
 {
     public class GameSession
     {
@@ -21,7 +20,7 @@ namespace CardTowers_GameServer.Shine.Data
 
         public GameSession(MatchmakingEntry e1, MatchmakingEntry e2)
         {
-            this.Id = Guid.NewGuid().ToString();
+            Id = Guid.NewGuid().ToString();
 
             PlayerSessions = new List<Player>(Constants.MAX_PLAYERS_STANDARD_MULTIPLAYER);
 
@@ -48,29 +47,29 @@ namespace CardTowers_GameServer.Shine.Data
 
         public void Start()
         {
-            Console.WriteLine("Started game session: " +  Id 
+            Console.WriteLine("Started game session: " + Id
                 + " | Players: " + PlayerSessions[0].Data.Username + " | " + PlayerSessions[1].Data.Username);
-            
+
             ServerStopwatch = Stopwatch.StartNew();
         }
 
 
         public void Cleanup()
         {
-            this.PlayerSessions.Clear();
+            PlayerSessions.Clear();
         }
 
 
         public void Stop(Player winner)
         {
             ServerStopwatch.Stop();
-            this.WinnerId = winner.Connection.Id;
+            WinnerId = winner.Connection.Id;
 
-            Console.WriteLine("Game session stopped: " + this.Id);
+            Console.WriteLine("Game session stopped: " + Id);
             Console.WriteLine(winner.Data.Username + " is the winner!");
             Console.WriteLine("Cleaning up game session, send final state to clients.");
 
-            this.OnGameSessionStopped(this);
+            OnGameSessionStopped(this);
         }
 
 

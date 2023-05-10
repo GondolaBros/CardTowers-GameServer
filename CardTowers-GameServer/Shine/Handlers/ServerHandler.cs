@@ -1,13 +1,10 @@
 ﻿using LiteNetLib;
 using LiteNetLib.Utils;
-using System;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
 using CardTowers_GameServer.Shine.Interfaces;
-using CardTowers_GameServer.Shine.Data;
-using Microsoft.VisualBasic.FileIO;
+using CardTowers_GameServer.Shine.Matchmaking;
+using CardTowers_GameServer.Shine.Entities;
+using CardTowers_GameServer.Shine.Network;
+using CardTowers_GameServer.Shine.State;
 
 namespace CardTowers_GameServer.Shine.Handlers
 {
@@ -20,7 +17,7 @@ namespace CardTowers_GameServer.Shine.Handlers
 
         private volatile bool _isRunning;
 
-        private GameSessionManager gameSessionManager;
+        private GameSessionHandler gameSessionManager;
 
 
         public ServerHandler()
@@ -29,7 +26,7 @@ namespace CardTowers_GameServer.Shine.Handlers
             LiteNetListener = new EventBasedNetListener();
             LiteNetManager = new NetManager(LiteNetListener);
 
-            gameSessionManager = new GameSessionManager();
+            gameSessionManager = new GameSessionHandler();
 
 
             LiteNetListener.NetworkReceiveEvent += LiteNetListener_NetworkReceiveEvent;

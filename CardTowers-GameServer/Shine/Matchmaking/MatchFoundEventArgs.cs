@@ -1,6 +1,4 @@
-﻿using CardTowers_GameServer.Shine.Data;
-
-namespace CardTowers_GameServer.Shine.Handlers
+﻿namespace CardTowers_GameServer.Shine.Matchmaking
 {
     public class MatchFoundEventArgs : EventArgs
     {
@@ -12,8 +10,8 @@ namespace CardTowers_GameServer.Shine.Handlers
 
         public MatchFoundEventArgs(MatchmakingEntry p1, MatchmakingEntry p2)
         {
-            this.Player1 = p1;
-            this.Player2 = p2;
+            Player1 = p1;
+            Player2 = p2;
         }
     }
 }

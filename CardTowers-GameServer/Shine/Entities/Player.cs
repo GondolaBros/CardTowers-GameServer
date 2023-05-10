@@ -1,7 +1,7 @@
-﻿using System;
-using CardTowers_GameServer.Shine.Models;
+﻿using CardTowers_GameServer.Shine.Data;
+using CardTowers_GameServer.Shine.Network;
 
-namespace CardTowers_GameServer.Shine.Data
+namespace CardTowers_GameServer.Shine.Entities
 {
     public class Player
     {
@@ -14,10 +14,12 @@ namespace CardTowers_GameServer.Shine.Data
         // Realtime data
         public GameMap GameMap { get; private set; }
 
+        public Deck Deck { get; private set; }
+
         public Player(Connection connection, PlayerData playerData)
         {
-            this.Connection = connection;
-            this.Data = playerData;
+            Connection = connection;
+            Data = playerData;
         }
     }
 }

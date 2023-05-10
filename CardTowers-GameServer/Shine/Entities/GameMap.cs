@@ -1,7 +1,8 @@
 ﻿using System;
+using CardTowers_GameServer.Shine.Entities;
 using CardTowers_GameServer.Shine.Util;
 
-namespace CardTowers_GameServer.Shine.Models
+namespace CardTowers_GameServer.Shine.Entities
 {
     public class GameMap
     {

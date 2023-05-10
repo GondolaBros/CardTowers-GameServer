@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Threading.Tasks;
-using CardTowers_GameServer.Shine.Data;
+using CardTowers_GameServer.Shine.Matchmaking;
 
 namespace CardTowers_GameServer.Shine.Handlers
 {

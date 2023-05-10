@@ -1,4 +1,4 @@
-﻿using CardTowers_GameServer.Shine.Data;
+﻿using CardTowers_GameServer.Shine.State;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -7,12 +7,12 @@ using System.Threading.Tasks;
 
 namespace CardTowers_GameServer.Shine.Handlers
 {
-   
-    public class GameSessionManager
+
+    public class GameSessionHandler
     {
         private Dictionary<string, GameSession> gameSessions;
 
-        public GameSessionManager()
+        public GameSessionHandler()
         {
             gameSessions = new Dictionary<string, GameSession>();
         }
