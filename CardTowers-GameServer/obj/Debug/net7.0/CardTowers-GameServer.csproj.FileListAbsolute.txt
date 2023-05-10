@@ -1,0 +1,15 @@
+C:\Repos\CardTowers-GameServer\CardTowers-GameServer\bin\Debug\net7.0\CardTowers-GameServer.exe
+C:\Repos\CardTowers-GameServer\CardTowers-GameServer\bin\Debug\net7.0\CardTowers-GameServer.deps.json
+C:\Repos\CardTowers-GameServer\CardTowers-GameServer\bin\Debug\net7.0\CardTowers-GameServer.runtimeconfig.json
+C:\Repos\CardTowers-GameServer\CardTowers-GameServer\bin\Debug\net7.0\CardTowers-GameServer.dll
+C:\Repos\CardTowers-GameServer\CardTowers-GameServer\bin\Debug\net7.0\CardTowers-GameServer.pdb
+C:\Repos\CardTowers-GameServer\CardTowers-GameServer\obj\Debug\net7.0\CardTowers-GameServer.csproj.AssemblyReference.cache
+C:\Repos\CardTowers-GameServer\CardTowers-GameServer\obj\Debug\net7.0\CardTowers-GameServer.GeneratedMSBuildEditorConfig.editorconfig
+C:\Repos\CardTowers-GameServer\CardTowers-GameServer\obj\Debug\net7.0\CardTowers-GameServer.AssemblyInfoInputs.cache
+C:\Repos\CardTowers-GameServer\CardTowers-GameServer\obj\Debug\net7.0\CardTowers-GameServer.AssemblyInfo.cs
+C:\Repos\CardTowers-GameServer\CardTowers-GameServer\obj\Debug\net7.0\CardTowers-GameServer.csproj.CoreCompileInputs.cache
+C:\Repos\CardTowers-GameServer\CardTowers-GameServer\obj\Debug\net7.0\CardTowers-GameServer.dll
+C:\Repos\CardTowers-GameServer\CardTowers-GameServer\obj\Debug\net7.0\refint\CardTowers-GameServer.dll
+C:\Repos\CardTowers-GameServer\CardTowers-GameServer\obj\Debug\net7.0\CardTowers-GameServer.pdb
+C:\Repos\CardTowers-GameServer\CardTowers-GameServer\obj\Debug\net7.0\CardTowers-GameServer.genruntimeconfig.cache
+C:\Repos\CardTowers-GameServer\CardTowers-GameServer\obj\Debug\net7.0\ref\CardTowers-GameServer.dll

@@ -5,6 +5,8 @@ namespace CardTowers_GameServer.Shine.Data
 	{
 		public int EloRating { get; set; }
 
+		public string Username { get; set; }
+
 		// Game mode?
 
 		// Ping ?

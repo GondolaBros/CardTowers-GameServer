@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using CardTowers_GameServer.Shine.Handlers;
 using CardTowers_GameServer.Shine.Models;
 using CardTowers_GameServer.Shine.Util;
 
@@ -9,64 +10,91 @@ namespace CardTowers_GameServer.Shine.Data
     public class GameSession
     {
         public string Id { get; private set; }
-        public Dictionary<Player, GameMap> PlayerGameMap { get; private set; }
-        public Stopwatch ElapsedTime { get; private set; }
 
-        private readonly List<Player> playerSessions;
+        public Stopwatch ServerStopwatch { get; private set; }
 
-        // Constructor
-        public GameSession(List<Player> players)
+        public List<Player> PlayerSessions { get; private set; }
+
+        public event Action<GameSession> OnGameSessionStopped;
+
+        public int WinnerId { get; private set; }
+
+        public GameSession(MatchmakingEntry e1, MatchmakingEntry e2)
         {
             this.Id = Guid.NewGuid().ToString();
-            this.playerSessions = players;
 
-            PlayerGameMap = new Dictionary<Player, GameMap>();
+            PlayerSessions = new List<Player>(Constants.MAX_PLAYERS_STANDARD_MULTIPLAYER);
 
-            // Initialize each player's game map
-            foreach (var player in playerSessions)
-            {
-                PlayerGameMap[player] = new GameMap();
-            }
+            PlayerData p1Data = new PlayerData();
+            p1Data.Username = e1.Parameters.Username;
+            Player p1 = new Player(e1.Connection, p1Data);
 
-            ElapsedTime = new Stopwatch();
+            PlayerData p2Data = new PlayerData();
+            p2Data.Username = e2.Parameters.Username;
+            Player p2 = new Player(e2.Connection, p2Data);
 
+            PlayerSessions.Add(p1);
+            PlayerSessions.Add(p2);
+
+            ServerStopwatch = new Stopwatch();
         }
 
 
-        // Assign a map to a player
-        public void AssignPlayerToMap(Player player, GameMap map)
+        public long GetElapsedTime()
         {
-            PlayerGameMap[player] = map;
+            return ServerStopwatch.Elapsed.Ticks;
         }
 
-        // Get a player's map
-        public GameMap GetPlayerMap(Player player)
+
+        public void Start()
         {
-            return PlayerGameMap[player];
+            Console.WriteLine("Started game session: " +  Id 
+                + " | Players: " + PlayerSessions[0].Data.Username + " | " + PlayerSessions[1].Data.Username);
+            
+            ServerStopwatch = Stopwatch.StartNew();
         }
 
 
-        // Methods to manage the game session
-        public void StartGame()
+        public void Cleanup()
         {
-            // Initialize game state, send initial data to players, start the stopwatch, etc.
-            ElapsedTime.Start();
+            this.PlayerSessions.Clear();
         }
 
-        public void EndGame(Player winner)
+
+        public void Stop(Player winner)
         {
-            // Handle game end logic, declare the winner, send final data to players, etc.
-            ElapsedTime.Stop();
+            ServerStopwatch.Stop();
+            this.WinnerId = winner.Connection.Id;
+
+            Console.WriteLine("Game session stopped: " + this.Id);
+            Console.WriteLine(winner.Data.Username + " is the winner!");
+            Console.WriteLine("Cleaning up game session, send final state to clients.");
+
+            this.OnGameSessionStopped(this);
         }
 
-        public void UpdateGame()
+
+        public bool HasPlayer(int id)
         {
-            // Update game state, process player inputs, update the game board for each player, etc.
+            return PlayerSessions.Exists(p => p.Connection.Id == id);
         }
+
 
         public void PlayerDisconnected(Player player)
         {
+
+            Console.WriteLine("GameSession: PlayerDisconnected: " + player.Data.Username);
+
             // Handle player disconnection, possibly end the game and declare the other player as the winner.
+            // Remove the player from the session
+            PlayerSessions.Remove(player);
+
+            // If there's only one player left, they are the winner
+            if (PlayerSessions.Count == 1)
+            {
+                Console.WriteLine("GameSession player count: " + PlayerSessions.Count);
+                Stop(PlayerSessions[0]);
+            }
         }
     }
 }

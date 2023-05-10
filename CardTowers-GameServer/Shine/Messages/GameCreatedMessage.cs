@@ -1,29 +1,28 @@
-﻿using System;
-using CardTowers_GameServer.Shine.Interfaces;
+﻿using CardTowers_GameServer.Shine.Interfaces;
 using LiteNetLib;
 using LiteNetLib.Utils;
 
-namespace CardTowers_GameServer.Shine.Messages
+public class GameCreatedMessage : IHandledMessage
 {
-	public class GameCreatedMessage : IHandledMessage
-	{
-        public Guid Id { get; set; }
+    public string Id { get; set; }
+    public long ElapsedTicks { get; set; }
 
 
-        public void Deserialize(NetDataReader reader)
-        {
-            throw new NotImplementedException();
-        }
+    public void Deserialize(NetDataReader reader)
+    {
+        Id = reader.GetString();
+        ElapsedTicks = reader.GetLong();
+    }
 
-        public void Serialize(NetDataWriter writer)
-        {
-            throw new NotImplementedException();
-        }
+    public void Serialize(NetDataWriter writer)
+    {
+        writer.Put(Id);
+        writer.Put(ElapsedTicks);
+    }
 
-        public void Handle(NetPeer peer)
-        {
-            throw new NotImplementedException();
-        }
+    public void Handle(NetPeer peer)
+    {
+
     }
 }
 

@@ -59,26 +59,26 @@ namespace CardTowers_GameServer.Shine.Handlers
                     index = ~index;
                 }
                 _queue.Insert(index, player);
-            }
 
-            //Console.WriteLine("Added player to queue: " + player.Username + " | Count: " + _queue.Count);
+                Console.WriteLine("Added player entry to matchmaking queue: " + player.Parameters.Username + " | Count: " + _queue.Count);
+            }
         }
 
 
         public bool TryRemove(MatchmakingEntry player)
         {
-            //Console.WriteLine("TryRemove player from queue: " + player.Username + " | Count: " + _queue.Count);
+            //Console.WriteLine("TryRemove player from queue: " + player.Parameters.Username + " | Count: " + _queue.Count);
 
             lock (_queueLock)
             {
                 bool removed = _queue.Remove(player);
-                //Console.WriteLine("Removal result for player " + player.Username + ": " + removed);
+                Console.WriteLine("Removed player entry from matchmaking queue: " + player.Parameters.Username + ": " + removed);
                 return removed;
             }
         }
 
 
-        public MatchmakingEntry GetPlayerById(int id)
+        public MatchmakingEntry? GetPlayerById(int id)
         {
             lock (_queueLock)
             {
@@ -159,7 +159,7 @@ namespace CardTowers_GameServer.Shine.Handlers
                         if (TryRemove(player) && TryRemove(opponent))
                         {
                             //Console.WriteLine("Match created for: " + player.Data.Username + " | " + opponent.Data.Username);
-                            Console.WriteLine("Match found event invoked and players cleaned up from matchmaker");
+                            Console.WriteLine("PeriodicMatchmakingAsync | Match found, removed both player entries from queue!");
 
                         }
                     }
@@ -177,7 +177,7 @@ namespace CardTowers_GameServer.Shine.Handlers
 
     public class PlayerEloComparer : IComparer<MatchmakingEntry>
     {
-        public int Compare(MatchmakingEntry x, MatchmakingEntry y)
+        public int Compare(MatchmakingEntry? x, MatchmakingEntry? y)
         {
             if (x == null && y == null) return 0;
             if (x == null) return -1;

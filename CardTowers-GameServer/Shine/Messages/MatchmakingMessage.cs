@@ -36,6 +36,7 @@ public class MatchmakingMessage : IHandledMessage
        
         MatchmakingParameters matchmakingParameters = new MatchmakingParameters();
         matchmakingParameters.EloRating = 1500;
+        matchmakingParameters.Username = Username;
         MatchmakingEntry matchmakingEntry =
             new MatchmakingEntry(connectedPeer, matchmakingParameters);
 

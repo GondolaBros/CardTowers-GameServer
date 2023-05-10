@@ -7,6 +7,7 @@ using System.Diagnostics;
 using System.Linq;
 using CardTowers_GameServer.Shine.Interfaces;
 using CardTowers_GameServer.Shine.Data;
+using Microsoft.VisualBasic.FileIO;
 
 namespace CardTowers_GameServer.Shine.Handlers
 {
@@ -19,11 +20,16 @@ namespace CardTowers_GameServer.Shine.Handlers
 
         private volatile bool _isRunning;
 
+        private GameSessionManager gameSessionManager;
+
+
         public ServerHandler()
         {
             PacketProcessor = new NetPacketProcessor();
             LiteNetListener = new EventBasedNetListener();
             LiteNetManager = new NetManager(LiteNetListener);
+
+            gameSessionManager = new GameSessionManager();
 
 
             LiteNetListener.NetworkReceiveEvent += LiteNetListener_NetworkReceiveEvent;
@@ -34,23 +40,26 @@ namespace CardTowers_GameServer.Shine.Handlers
             MatchmakingHandler.Instance.OnMatchFound += OnMatchFound;
 
             RegisterAndSubscribe<MatchmakingMessage>();
-
-            Console.WriteLine("Started connection handler...");
+            RegisterAndSubscribe<GameCreatedMessage>();
+            RegisterAndSubscribe<GameEndedMessagae>();
 
             _ = PeriodicMatchmakingAsync();
 
+            Console.WriteLine("Started connection handler...");
             Console.WriteLine("Started matchmaking handler...");
+            Console.WriteLine("Started game session handler...");
+
         }
 
 
-      
 
         public void Start(int port)
         {
             LiteNetManager.Start(port);
             IsRunning = true;
-            Console.WriteLine("ServerConnectionHandler listening on port: " + port);
+            Console.WriteLine("ServerHandler listening on port: " + port);
         }
+
 
         public void Stop()
         {
@@ -63,6 +72,7 @@ namespace CardTowers_GameServer.Shine.Handlers
         {
             LiteNetManager.PollEvents();
         }
+
 
 
         private void RegisterAndSubscribe<T>() where T : class, IHandledMessage, new()
@@ -80,6 +90,7 @@ namespace CardTowers_GameServer.Shine.Handlers
         }
 
 
+
         public static Connection? GetPeerById(int id)
         {
             return ConnectedPeers.Find(p => p.Id == id);
@@ -95,7 +106,6 @@ namespace CardTowers_GameServer.Shine.Handlers
             {
                 p.Peer.Disconnect();
                 ConnectedPeers.Remove(p);
-                Console.WriteLine("Disconnected Peer: " + p.Peer.EndPoint.ToString() + " | ID: " + p.Id);
             }
         }
 
@@ -105,32 +115,41 @@ namespace CardTowers_GameServer.Shine.Handlers
             Console.WriteLine("Matchmaker found match for: " + e.Player1.Connection.Id
                 + " | " + e.Player2.Connection.Id);
 
-            // create the gamesession and send the details to client
+            GameSession newGameSession = new GameSession(e.Player1, e.Player2);
+            newGameSession.OnGameSessionStopped += OnGameSessionStopped;
+            newGameSession.Start();
 
-            //List<Player> players = new List<Player>();
+            gameSessionManager.AddGameSession(newGameSession);
+            GameCreatedMessage gameCreatedMessage = new GameCreatedMessage();
+            gameCreatedMessage.ElapsedTicks = newGameSession.GetElapsedTime();
+            gameCreatedMessage.Id = newGameSession.Id;
 
-            //PlayerData p1Data = new PlayerData();
-            //p1Data.Username = 
-
-            //Player p1 = new Player(e.Player1.Connection, PlayerDataHandler.getPlayerData(e.Player1));
-            //Player p2 = new Player(e.Player2.Connection, PlayerDataHandler.getPlayerData(e.Player2));
-
-            //GameSession newGameSession = new GameSession(players);
-
-            // old
-            //MatchFoundMessage p1 = new MatchFoundMessage();
-            //p1.OpponentUsername = opponent.Parameters.Username;
-
-            //MatchFoundMessage p2 = new MatchFoundMessage();
-            //p2.OpponentUsername = player.Data.Username;
-
-            //_serverHandler.SendMessage(p1, player.Connection.Peer);
-            //_serverHandler.SendMessage(p2, opponent.Connection.Peer);
-
-            // we want to create a game session
-
+            SendMessage(gameCreatedMessage, e.Player1.Connection.Peer);
+            SendMessage(gameCreatedMessage, e.Player2.Connection.Peer);
         }
 
+
+        private void OnGameSessionStopped(GameSession gameSession)
+        {
+            GameEndedMessagae gameEnded = new GameEndedMessagae();
+            gameEnded.ElapsedTicks = gameSession.GetElapsedTime();
+            gameEnded.WinnerId = gameSession.WinnerId;
+
+            foreach (Player p in gameSession.PlayerSessions)
+            {
+                this.SendMessage(gameEnded, p.Connection.Peer);
+            }
+
+            TimeSpan elapsedSpan = new TimeSpan(gameSession.GetElapsedTime());
+            double totalSeconds = elapsedSpan.TotalSeconds;
+
+            gameSession.Cleanup();
+
+            Console.WriteLine("OnGameSessionStopped: " + gameSession.Id + " |Elapsed seconds: " + totalSeconds);
+
+            gameSessionManager.RemoveGameSession(gameSession);
+            Console.WriteLine("Total game sessions running: " + gameSessionManager.Count());
+        }
 
         public async Task PeriodicMatchmakingAsync()
         {
@@ -160,16 +179,38 @@ namespace CardTowers_GameServer.Shine.Handlers
 
         private void LiteNetListener_PeerDisconnectedEvent(NetPeer peer, DisconnectInfo disconnectInfo)
         {
+            Console.WriteLine("ServerHandler | PeerDisconnectedEvent: " + disconnectInfo.Reason + " | " + peer.Id);
+
             Connection? disconnectedPeer = GetPeerById(peer.Id);
 
-            if (disconnectedPeer != null)
-            {
+           if (disconnectedPeer != null)
+           {
+                // Check if they were in a game
+                GameSession gameSession = gameSessionManager.GetGameSessionByPlayerId(disconnectedPeer.Id);
+
+                // If the peer was in a game session, handle their disconnection
+                if (gameSession != null)
+                {
+                    Player? p = gameSession.PlayerSessions.Find(p => p.Connection.Id == disconnectedPeer.Id);
+
+                    if (p != null)
+                    { 
+                        gameSession.PlayerDisconnected(p);
+                    }
+
+                }
+
+                // Check if they were matchmaking
+                MatchmakingEntry? potentialEntry = MatchmakingHandler.Instance.GetPlayerById(disconnectedPeer.Id);
+
+                if (potentialEntry != null)
+                {
+                    MatchmakingHandler.Instance.TryRemove(potentialEntry);
+                }
+
+           
+                // Now finally clean up their connection
                 ConnectedPeers.Remove(disconnectedPeer);
-
-                MatchmakingEntry matchmakingPlayer = MatchmakingHandler.Instance.GetPlayerById(disconnectedPeer.Id);
-                MatchmakingHandler.Instance.TryRemove(matchmakingPlayer);
-
-                Console.WriteLine("ConnectionHandler | PeerDisconnectedEvent: " + disconnectInfo.Reason + " | " + disconnectedPeer.Id);
             }
         }
 
