@@ -1,27 +1,25 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Repos\\CardTowers-GameServer\\CardTowers-GameServer\\CardTowers-GameServer.csproj": {}
+    "/Users/devontomlin/Documents/Repos/CardTowers-GameServer/CardTowers-GameServer/CardTowers-GameServer.csproj": {}
   },
   "projects": {
-    "C:\\Repos\\CardTowers-GameServer\\CardTowers-GameServer\\CardTowers-GameServer.csproj": {
+    "/Users/devontomlin/Documents/Repos/CardTowers-GameServer/CardTowers-GameServer/CardTowers-GameServer.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Repos\\CardTowers-GameServer\\CardTowers-GameServer\\CardTowers-GameServer.csproj",
+        "projectUniqueName": "/Users/devontomlin/Documents/Repos/CardTowers-GameServer/CardTowers-GameServer/CardTowers-GameServer.csproj",
         "projectName": "CardTowers-GameServer",
-        "projectPath": "C:\\Repos\\CardTowers-GameServer\\CardTowers-GameServer\\CardTowers-GameServer.csproj",
-        "packagesPath": "C:\\Users\\devon\\.nuget\\packages\\",
-        "outputPath": "C:\\Repos\\CardTowers-GameServer\\CardTowers-GameServer\\obj\\",
+        "projectPath": "/Users/devontomlin/Documents/Repos/CardTowers-GameServer/CardTowers-GameServer/CardTowers-GameServer.csproj",
+        "packagesPath": "/Users/devontomlin/.nuget/packages/",
+        "outputPath": "/Users/devontomlin/Documents/Repos/CardTowers-GameServer/CardTowers-GameServer/obj/",
         "projectStyle": "PackageReference",
         "configFilePaths": [
-          "C:\\Users\\devon\\AppData\\Roaming\\NuGet\\NuGet.Config",
-          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
+          "/Users/devontomlin/.nuget/NuGet/NuGet.Config"
         ],
         "originalTargetFrameworks": [
           "net7.0"
         ],
         "sources": {
-          "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
           "https://api.nuget.org/v3/index.json": {}
         },
         "frameworks": {
@@ -39,6 +37,20 @@
       "frameworks": {
         "net7.0": {
           "targetAlias": "net7.0",
+          "dependencies": {
+            "Microsoft.IdentityModel.Tokens": {
+              "target": "Package",
+              "version": "[6.30.1, )"
+            },
+            "Newtonsoft.Json": {
+              "target": "Package",
+              "version": "[13.0.3, )"
+            },
+            "System.IdentityModel.Tokens.Jwt": {
+              "target": "Package",
+              "version": "[6.30.1, )"
+            }
+          },
           "imports": [
             "net461",
             "net462",
@@ -50,12 +62,31 @@
           ],
           "assetTargetFallback": true,
           "warn": true,
+          "downloadDependencies": [
+            {
+              "name": "Microsoft.AspNetCore.App.Runtime.win-x64",
+              "version": "[7.0.5, 7.0.5]"
+            },
+            {
+              "name": "Microsoft.NETCore.App.Host.win-x64",
+              "version": "[7.0.5, 7.0.5]"
+            },
+            {
+              "name": "Microsoft.NETCore.App.Runtime.win-x64",
+              "version": "[7.0.5, 7.0.5]"
+            }
+          ],
           "frameworkReferences": {
             "Microsoft.NETCore.App": {
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\7.0.203\\RuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "/usr/local/share/dotnet/sdk/7.0.203/RuntimeIdentifierGraph.json"
+        }
+      },
+      "runtimes": {
+        "win-x64": {
+          "#import": []
         }
       }
     }

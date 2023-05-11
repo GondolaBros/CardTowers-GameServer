@@ -5,6 +5,7 @@ using CardTowers_GameServer.Shine.Matchmaking;
 using CardTowers_GameServer.Shine.Entities;
 using CardTowers_GameServer.Shine.Network;
 using CardTowers_GameServer.Shine.State;
+using CardTowers_GameServer.Shine.Util;
 
 namespace CardTowers_GameServer.Shine.Handlers
 {
@@ -13,21 +14,18 @@ namespace CardTowers_GameServer.Shine.Handlers
         public EventBasedNetListener LiteNetListener;
         public NetManager LiteNetManager;
         public NetPacketProcessor PacketProcessor;
-        public static List<Connection> ConnectedPeers = new List<Connection>();
-
-        private volatile bool _isRunning;
-
         private GameSessionHandler gameSessionManager;
-
+        private CognitoJwtManager cognitoJwtManager;
+        public static List<Connection> ConnectedPeers = new List<Connection>();
+        private volatile bool _isRunning;
 
         public ServerHandler()
         {
             PacketProcessor = new NetPacketProcessor();
             LiteNetListener = new EventBasedNetListener();
             LiteNetManager = new NetManager(LiteNetListener);
-
             gameSessionManager = new GameSessionHandler();
-
+            cognitoJwtManager = new CognitoJwtManager(Constants.COGNITO_POOL_ID, Constants.COGNITO_REGION);
 
             LiteNetListener.NetworkReceiveEvent += LiteNetListener_NetworkReceiveEvent;
             LiteNetListener.PeerConnectedEvent += LiteNetListener_PeerConnectedEvent;
@@ -212,10 +210,32 @@ namespace CardTowers_GameServer.Shine.Handlers
         }
 
 
+        private async void OnConnectionRequestAsync(ConnectionRequest request)
+        {
+            // Assuming the JWT token is sent as a string in the ConnectionRequest's Data
+            string token = request.Data.GetString();
+
+            // Validate the token
+            bool isValid = await cognitoJwtManager.ValidateTokenAsync(token);
+
+            if (isValid)
+            {
+                // If the token is valid, accept the connection
+                request.Accept();
+                Console.WriteLine("Incoming client JWT is valid - accepted connection");
+            }
+            else
+            {
+                // If the token is not valid, reject the connection
+                request.Reject();
+            }
+        }
+
+
+
         private void LiteNetListener_ConnectionRequestEvent(ConnectionRequest request)
         {
-            //Console.WriteLine("ConnectionHandler | ConnectionRequestEvent: " + request.ToString());
-            request.AcceptIfKey("test_key");
+            OnConnectionRequestAsync(request);
         }
 
 

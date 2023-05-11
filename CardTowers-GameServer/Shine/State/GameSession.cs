@@ -11,9 +11,7 @@ namespace CardTowers_GameServer.Shine.State
         public string Id { get; private set; }
 
         public Stopwatch ServerStopwatch { get; private set; }
-
         public List<Player> PlayerSessions { get; private set; }
-
         public event Action<GameSession> OnGameSessionStopped;
 
         public int WinnerId { get; private set; }
