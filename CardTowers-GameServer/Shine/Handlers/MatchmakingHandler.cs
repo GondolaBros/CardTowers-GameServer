@@ -78,11 +78,11 @@ namespace CardTowers_GameServer.Shine.Handlers
         }
 
 
-        public MatchmakingEntry? GetPlayerById(int id)
+        public MatchmakingEntry? GetMatchmakingEntryById(int id)
         {
             lock (_queueLock)
             {
-                return _queue.Find(p => p.Connection.Id == id);
+                return _queue.Find(p => p.Peer.Id == id);
             }
         }
 
@@ -100,7 +100,7 @@ namespace CardTowers_GameServer.Shine.Handlers
 
             for (int i = index - 1; i >= 0 && player.Parameters.EloRating - _queue[i].Parameters.EloRating <= maxEloDifference; i--)
             {
-                if (_queue[i].Connection.Id == player.Connection.Id)
+                if (_queue[i].Peer.Id == player.Peer.Id)
                 {
                     continue;
                 }
@@ -115,7 +115,7 @@ namespace CardTowers_GameServer.Shine.Handlers
 
             for (int i = index; i < _queue.Count && _queue[i].Parameters.EloRating - player.Parameters.EloRating <= maxEloDifference; i++)
             {
-                if (_queue[i].Connection.Id == player.Connection.Id)
+                if (_queue[i].Peer.Id == player.Peer.Id)
                 {
                     continue;
                 }

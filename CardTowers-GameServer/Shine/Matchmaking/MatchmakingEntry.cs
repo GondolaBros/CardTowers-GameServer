@@ -1,17 +1,18 @@
 ﻿using System;
 using CardTowers_GameServer.Shine.Network;
+using LiteNetLib;
 
 namespace CardTowers_GameServer.Shine.Matchmaking
 {
     public class MatchmakingEntry
     {
-        public Connection Connection { get; set; }
-        public MatchmakingParameters Parameters { get; set; }
+        public NetPeer Peer { get; private set; }
+        public MatchmakingParameters Parameters { get; private set; }
 
-        public MatchmakingEntry(Connection connection, MatchmakingParameters parameters)
+        public MatchmakingEntry(NetPeer peer, MatchmakingParameters parameters)
         {
-            Connection = connection;
-            Parameters = parameters;
+            this.Peer = peer;
+            this.Parameters = parameters;
         }
     }
 }

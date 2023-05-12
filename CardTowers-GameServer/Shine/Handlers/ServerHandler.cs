@@ -19,7 +19,6 @@ namespace CardTowers_GameServer.Shine.Handlers
         public NetPacketProcessor PacketProcessor;
         private GameSessionHandler gameSessionManager;
         private CognitoJwtManager cognitoJwtManager;
-        public static List<Connection> ConnectedPeers = new List<Connection>();
         private PlayerRepository playerRepository;
 
         private volatile bool _isRunning;
@@ -98,29 +97,27 @@ namespace CardTowers_GameServer.Shine.Handlers
 
 
 
-        public static Connection? GetPeerById(int id)
+        public NetPeer? GetPeerById(int id)
         {
-            return ConnectedPeers.Find(p => p.Id == id);
+            return this.LiteNetManager.ConnectedPeerList.Find(p => p.Id == id);
         }
 
 
-
-        public void Disconnect(Connection peer)
+        public void Disconnect(NetPeer peer)
         {
-            Connection? p = GetPeerById(peer.Id);
+            NetPeer? p = GetPeerById(peer.Id);
 
             if (p != null)
             {
-                p.Peer.Disconnect();
-                ConnectedPeers.Remove(p);
+                p.Disconnect();
             }
         }
 
 
         private void OnMatchFound(object? sender, MatchFoundEventArgs e)
         {
-            Console.WriteLine("Matchmaker found match for: " + e.Player1.Connection.Id
-                + " | " + e.Player2.Connection.Id);
+            Console.WriteLine("Matchmaker found match for: " + e.Player1.Peer.Id
+                + " | " + e.Player2.Peer.Id);
 
             GameSession newGameSession = new GameSession(e.Player1, e.Player2);
             newGameSession.OnGameSessionStopped += OnGameSessionStopped;
@@ -131,8 +128,8 @@ namespace CardTowers_GameServer.Shine.Handlers
             gameCreatedMessage.ElapsedTicks = newGameSession.GetElapsedTime();
             gameCreatedMessage.Id = newGameSession.Id;
 
-            SendMessage(gameCreatedMessage, e.Player1.Connection.Peer);
-            SendMessage(gameCreatedMessage, e.Player2.Connection.Peer);
+            SendMessage(gameCreatedMessage, e.Player1.Peer);
+            SendMessage(gameCreatedMessage, e.Player2.Peer);
         }
 
 
@@ -144,7 +141,7 @@ namespace CardTowers_GameServer.Shine.Handlers
 
             foreach (Player p in gameSession.PlayerSessions)
             {
-                this.SendMessage(gameEnded, p.Connection.Peer);
+                this.SendMessage(gameEnded, p.Peer);
             }
 
             TimeSpan elapsedSpan = new TimeSpan(gameSession.GetElapsedTime());
@@ -157,6 +154,7 @@ namespace CardTowers_GameServer.Shine.Handlers
             gameSessionManager.RemoveGameSession(gameSession);
             Console.WriteLine("Total game sessions running: " + gameSessionManager.Count());
         }
+
 
         public async Task PeriodicMatchmakingAsync()
         {
@@ -178,27 +176,24 @@ namespace CardTowers_GameServer.Shine.Handlers
 
         private void LiteNetListener_PeerConnectedEvent(NetPeer peer)
         {
+            // TODO: what now in peerconnectedevent
             Console.WriteLine("ConnectionHandler | PeerConnectedEvent: " + peer.EndPoint.ToString());
-            Connection connectedPeer = new Connection(peer);
-            ConnectedPeers.Add(connectedPeer);
         }
 
 
         private void LiteNetListener_PeerDisconnectedEvent(NetPeer peer, DisconnectInfo disconnectInfo)
         {
-            Console.WriteLine("ServerHandler | PeerDisconnectedEvent: " + disconnectInfo.Reason + " | " + peer.Id);
+           Console.WriteLine("ServerHandler | PeerDisconnectedEvent: " + disconnectInfo.Reason + " | " + peer.Id);
 
-            Connection? disconnectedPeer = GetPeerById(peer.Id);
-
-           if (disconnectedPeer != null)
+           if (peer != null)
            {
                 // Check if they were in a game
-                GameSession gameSession = gameSessionManager.GetGameSessionByPlayerId(disconnectedPeer.Id);
+                GameSession gameSession = gameSessionManager.GetGameSessionByPlayerId(peer.Id);
 
                 // If the peer was in a game session, handle their disconnection
                 if (gameSession != null)
                 {
-                    Player? p = gameSession.PlayerSessions.Find(p => p.Connection.Id == disconnectedPeer.Id);
+                    Player? p = gameSession.PlayerSessions.Find(p => p.Peer.Id == peer.Id);
 
                     if (p != null)
                     { 
@@ -208,16 +203,12 @@ namespace CardTowers_GameServer.Shine.Handlers
                 }
 
                 // Check if they were matchmaking
-                MatchmakingEntry? potentialEntry = MatchmakingHandler.Instance.GetPlayerById(disconnectedPeer.Id);
+                MatchmakingEntry? potentialEntry = MatchmakingHandler.Instance.GetMatchmakingEntryById(peer.Id);
 
                 if (potentialEntry != null)
                 {
                     MatchmakingHandler.Instance.TryRemove(potentialEntry);
                 }
-
-           
-                // Now finally clean up their connection
-                ConnectedPeers.Remove(disconnectedPeer);
             }
         }
 
@@ -270,7 +261,6 @@ namespace CardTowers_GameServer.Shine.Handlers
                 request.Reject();
             }
         }
-
 
 
 

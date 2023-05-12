@@ -24,19 +24,20 @@ public class MatchmakingMessage : IHandledMessage
     public void Handle(NetPeer peer)
     {
         Console.WriteLine("Incoming MatchmakingMessage: " + Username + " | ID: " + peer.Id);
-        Connection? connectedPeer = ServerHandler.GetPeerById(peer.Id);
+        /*
+        //Connection? connectedPeer = ServerHandler.GetPeerById(peer.Id);
 
         if (connectedPeer == null)
         {
             throw new Exception("Unhandled matchmaking request");
-        }
+        }*/
 
        
         MatchmakingParameters matchmakingParameters = new MatchmakingParameters();
         matchmakingParameters.EloRating = 1500;
         matchmakingParameters.Username = Username;
         MatchmakingEntry matchmakingEntry =
-            new MatchmakingEntry(connectedPeer, matchmakingParameters);
+            new MatchmakingEntry(peer, matchmakingParameters);
 
         MatchmakingHandler.Instance.Enqueue(matchmakingEntry);
     }

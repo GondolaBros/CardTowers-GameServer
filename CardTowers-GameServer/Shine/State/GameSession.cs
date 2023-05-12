@@ -24,11 +24,11 @@ namespace CardTowers_GameServer.Shine.State
 
             PlayerData p1Data = new PlayerData();
             p1Data.Username = e1.Parameters.Username;
-            Player p1 = new Player(e1.Connection, p1Data);
+            Player p1 = new Player(e1.Peer, p1Data);
 
             PlayerData p2Data = new PlayerData();
             p2Data.Username = e2.Parameters.Username;
-            Player p2 = new Player(e2.Connection, p2Data);
+            Player p2 = new Player(e2.Peer, p2Data);
 
             PlayerSessions.Add(p1);
             PlayerSessions.Add(p2);
@@ -61,7 +61,7 @@ namespace CardTowers_GameServer.Shine.State
         public void Stop(Player winner)
         {
             ServerStopwatch.Stop();
-            WinnerId = winner.Connection.Id;
+            WinnerId = winner.Peer.Id;
 
             Console.WriteLine("Game session stopped: " + Id);
             Console.WriteLine(winner.Data.Username + " is the winner!");
@@ -73,7 +73,7 @@ namespace CardTowers_GameServer.Shine.State
 
         public bool HasPlayer(int id)
         {
-            return PlayerSessions.Exists(p => p.Connection.Id == id);
+            return PlayerSessions.Exists(p => p.Peer.Id == id);
         }
 
 
