@@ -2,10 +2,12 @@
 using LiteNetLib.Utils;
 using CardTowers_GameServer.Shine.Interfaces;
 using CardTowers_GameServer.Shine.Matchmaking;
-using CardTowers_GameServer.Shine.Entities;
 using CardTowers_GameServer.Shine.Network;
 using CardTowers_GameServer.Shine.State;
 using CardTowers_GameServer.Shine.Util;
+using CardTowers_GameServer.Shine.Models;
+using CardTowers_GameServer.Shine.Data.Repositories;
+using Microsoft.Extensions.Logging;
 
 namespace CardTowers_GameServer.Shine.Handlers
 {
@@ -17,15 +19,24 @@ namespace CardTowers_GameServer.Shine.Handlers
         private GameSessionHandler gameSessionManager;
         private CognitoJwtManager cognitoJwtManager;
         public static List<Connection> ConnectedPeers = new List<Connection>();
+        private PlayerRepository playerRepository;
+
         private volatile bool _isRunning;
 
         public ServerHandler()
         {
+            var loggerFactory = LoggerFactory.Create(builder => { builder.AddConsole(); });
+
             PacketProcessor = new NetPacketProcessor();
             LiteNetListener = new EventBasedNetListener();
             LiteNetManager = new NetManager(LiteNetListener);
             gameSessionManager = new GameSessionHandler();
             cognitoJwtManager = new CognitoJwtManager(Constants.COGNITO_POOL_ID, Constants.COGNITO_REGION);
+
+            // Get an ILogger from the LoggerFactory
+            ILogger logger = loggerFactory.CreateLogger<ServerHandler>();
+
+            playerRepository = new PlayerRepository(Constants.PGSQL_RDS_CONNECTION_STRING, logger);
 
             LiteNetListener.NetworkReceiveEvent += LiteNetListener_NetworkReceiveEvent;
             LiteNetListener.PeerConnectedEvent += LiteNetListener_PeerConnectedEvent;
@@ -220,9 +231,22 @@ namespace CardTowers_GameServer.Shine.Handlers
 
             if (isValid)
             {
-                // If the token is valid, accept the connection
-                request.Accept();
-                Console.WriteLine("Incoming client JWT is valid - accepted connection");
+                // If the token is valid, get the "sub" claim which is the account id
+                string? accountId = cognitoJwtManager.GetSubjectFromToken(token);
+
+                if (accountId != null)
+                {
+                    // Load or create the player account
+                    var player = await playerRepository.LoadOrCreatePlayerAccount(accountId);
+                    // TODO: Here you might want to associate the player with the connection somehow,
+                    // so you know which player is associated with each connection.
+                    // For example, you might want to create a dictionary where the key is the connection
+                    // and the value is the player.
+
+                    // Accept the connection
+                    request.Accept();
+                    Console.WriteLine($"Incoming client JWT is valid - accepted connection for player {player.AccountId}");
+                }
             }
             else
             {
@@ -230,6 +254,7 @@ namespace CardTowers_GameServer.Shine.Handlers
                 request.Reject();
             }
         }
+
 
 
 

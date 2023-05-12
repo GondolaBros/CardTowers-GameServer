@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 
 
-namespace CardTowers_GameServer.Shine.Entities
+namespace CardTowers_GameServer.Shine.Models
 {
     public abstract class Building
     {

@@ -9,6 +9,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="Shine\Data\Entities\" />
+    <None Remove="Shine\Data\Repositories\" />
+  </ItemGroup>
+  <ItemGroup>
     <None Include="Lib\LiteNetLib\LiteNetLib.csproj" />
   </ItemGroup>
 
@@ -16,5 +20,14 @@
     <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="6.30.1" />
     <PackageReference Include="Microsoft.IdentityModel.Tokens" Version="6.30.1" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+    <PackageReference Include="Npgsql" Version="7.0.4" />
+    <PackageReference Include="Dapper" Version="2.0.123" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="7.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Logging" Version="7.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="7.0.0" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Shine\Data\Entities\" />
+    <Folder Include="Shine\Data\Repositories\" />
   </ItemGroup>
 </Project>

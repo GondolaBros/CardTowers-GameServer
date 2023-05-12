@@ -1,7 +1,7 @@
 ﻿using System.Diagnostics;
 using CardTowers_GameServer.Shine.Data;
-using CardTowers_GameServer.Shine.Entities;
 using CardTowers_GameServer.Shine.Matchmaking;
+using CardTowers_GameServer.Shine.Models;
 using CardTowers_GameServer.Shine.Util;
 
 namespace CardTowers_GameServer.Shine.State

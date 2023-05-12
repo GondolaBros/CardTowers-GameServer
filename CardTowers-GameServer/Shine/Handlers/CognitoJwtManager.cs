@@ -4,7 +4,7 @@ using System.Net;
 using System.IdentityModel.Tokens.Jwt;
 using System.Collections.Generic;
 
-namespace CardTowers_GameServer.Shine
+namespace CardTowers_GameServer.Shine.Handlers
 {
     public class CognitoJwtManager
     {
@@ -79,6 +79,16 @@ namespace CardTowers_GameServer.Shine
                 return false;
             }
         }
+
+
+        public string? GetSubjectFromToken(string token)
+        {
+            var handler = new JwtSecurityTokenHandler();
+            var jwtToken = handler.ReadJwtToken(token);
+
+            return jwtToken.Claims.FirstOrDefault(c => c.Type == "sub")?.Value;
+        }
+
     }
 }
 

@@ -1,5 +1,5 @@
 ﻿using System;
-namespace CardTowers_GameServer.Shine.Entities
+namespace CardTowers_GameServer.Shine.Models
 {
     using System.Collections;
     using System.Collections.Generic;

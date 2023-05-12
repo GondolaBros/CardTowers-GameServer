@@ -1,7 +1,7 @@
 ﻿using CardTowers_GameServer.Shine.Data;
 using CardTowers_GameServer.Shine.Network;
 
-namespace CardTowers_GameServer.Shine.Entities
+namespace CardTowers_GameServer.Shine.Models
 {
     public class Player
     {
