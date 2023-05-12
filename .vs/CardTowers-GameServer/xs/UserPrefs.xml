@@ -4,13 +4,11 @@
     <BreakpointStore />
   </MonoDevelop.Ide.DebuggingService.Breakpoints>
   <MonoDevelop.Ide.DebuggingService.PinnedWatches />
-  <MonoDevelop.Ide.Workbench ActiveDocument="CardTowers-GameServer/Shine/Handlers/ServerHandler.cs">
+  <MonoDevelop.Ide.Workbench ActiveDocument="CardTowers-GameServer/Shine/Data/BaseRepository.cs">
     <Files>
-      <File FileName="CardTowers-GameServer/Shine/State/GameSession.cs" Line="31" Column="59" />
-      <File FileName="CardTowers-GameServer/Shine/Handlers/MatchmakingHandler.cs" Line="1" Column="1" />
-      <File FileName="CardTowers-GameServer/Shine/Handlers/ServerHandler.cs" Line="209" Column="14" />
-      <File FileName="CardTowers-GameServer/Shine/CognitoJwtValidator.cs" Line="14" Column="45" />
-      <File FileName="CardTowers-GameServer/Shine/Util/Constants.cs" Line="9" Column="59" />
+      <File FileName="CardTowers-GameServer/Shine/Data/BaseRepository.cs" Line="101" Column="50" />
+      <File FileName="CardTowers-GameServer/Shine/Data/Entities/PlayerEntity.cs" Line="9" Column="49" />
+      <File FileName="CardTowers-GameServer/Shine/Data/IEntity.cs" Line="3" Column="29" />
     </Files>
     <Pads>
       <Pad Id="ProjectPad">
@@ -19,12 +17,13 @@
             <Node name="CardTowers-GameServer" expanded="True">
               <Node name="Lib" expanded="True" />
               <Node name="Shine" expanded="True">
-                <Node name="Data" expanded="True" />
-                <Node name="Entities" expanded="True" />
+                <Node name="Data" expanded="True">
+                  <Node name="Entities" expanded="True" />
+                  <Node name="Repositories" expanded="True" />
+                  <Node name="BaseRepository.cs" selected="True" />
+                </Node>
                 <Node name="Handlers" expanded="True" />
-                <Node name="Interfaces" expanded="True" />
-                <Node name="Matchmaking" expanded="True" />
-                <Node name="Messages" expanded="True" />
+                <Node name="Models" expanded="True" />
                 <Node name="State" expanded="True" />
                 <Node name="Util" expanded="True" />
               </Node>

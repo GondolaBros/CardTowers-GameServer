@@ -202,3 +202,17 @@
 /Users/devontomlin/Documents/Repos/CardTowers-GameServer/CardTowers-GameServer/obj/Release/net7.0/win-x64/CardTowers-GameServer.pdb
 /Users/devontomlin/Documents/Repos/CardTowers-GameServer/CardTowers-GameServer/obj/Release/net7.0/win-x64/CardTowers-GameServer.genruntimeconfig.cache
 /Users/devontomlin/Documents/Repos/CardTowers-GameServer/CardTowers-GameServer/obj/Release/net7.0/win-x64/ref/CardTowers-GameServer.dll
+/Users/devontomlin/Documents/Repos/CardTowers-GameServer/CardTowers-GameServer/bin/Release/net7.0/win-x64/Dapper.dll
+/Users/devontomlin/Documents/Repos/CardTowers-GameServer/CardTowers-GameServer/bin/Release/net7.0/win-x64/Microsoft.Extensions.Configuration.dll
+/Users/devontomlin/Documents/Repos/CardTowers-GameServer/CardTowers-GameServer/bin/Release/net7.0/win-x64/Microsoft.Extensions.Configuration.Abstractions.dll
+/Users/devontomlin/Documents/Repos/CardTowers-GameServer/CardTowers-GameServer/bin/Release/net7.0/win-x64/Microsoft.Extensions.Configuration.Binder.dll
+/Users/devontomlin/Documents/Repos/CardTowers-GameServer/CardTowers-GameServer/bin/Release/net7.0/win-x64/Microsoft.Extensions.DependencyInjection.dll
+/Users/devontomlin/Documents/Repos/CardTowers-GameServer/CardTowers-GameServer/bin/Release/net7.0/win-x64/Microsoft.Extensions.DependencyInjection.Abstractions.dll
+/Users/devontomlin/Documents/Repos/CardTowers-GameServer/CardTowers-GameServer/bin/Release/net7.0/win-x64/Microsoft.Extensions.Logging.dll
+/Users/devontomlin/Documents/Repos/CardTowers-GameServer/CardTowers-GameServer/bin/Release/net7.0/win-x64/Microsoft.Extensions.Logging.Abstractions.dll
+/Users/devontomlin/Documents/Repos/CardTowers-GameServer/CardTowers-GameServer/bin/Release/net7.0/win-x64/Microsoft.Extensions.Logging.Configuration.dll
+/Users/devontomlin/Documents/Repos/CardTowers-GameServer/CardTowers-GameServer/bin/Release/net7.0/win-x64/Microsoft.Extensions.Logging.Console.dll
+/Users/devontomlin/Documents/Repos/CardTowers-GameServer/CardTowers-GameServer/bin/Release/net7.0/win-x64/Microsoft.Extensions.Options.dll
+/Users/devontomlin/Documents/Repos/CardTowers-GameServer/CardTowers-GameServer/bin/Release/net7.0/win-x64/Microsoft.Extensions.Options.ConfigurationExtensions.dll
+/Users/devontomlin/Documents/Repos/CardTowers-GameServer/CardTowers-GameServer/bin/Release/net7.0/win-x64/Microsoft.Extensions.Primitives.dll
+/Users/devontomlin/Documents/Repos/CardTowers-GameServer/CardTowers-GameServer/bin/Release/net7.0/win-x64/Npgsql.dll

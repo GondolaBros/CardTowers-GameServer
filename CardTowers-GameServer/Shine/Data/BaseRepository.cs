@@ -1,4 +1,5 @@
-﻿using Dapper;
+﻿using CardTowers_GameServer.Shine.Data.Entities;
+using Dapper;
 using Microsoft.Extensions.Logging;
 using Npgsql;
 using System;
@@ -34,7 +35,7 @@ namespace CardTowers_GameServer.Shine.Data
             var sql = $"SELECT * FROM {_tableName} WHERE id = @Id";
             try
             {
-                return await connection.QueryFirstOrDefaultAsync<TEntity>(sql, new { Id = id });
+                return await connection.QueryFirstOrDefaultAsync<TEntity>(sql, new { id = id });
             }
             catch (Exception ex)
             {
@@ -64,7 +65,9 @@ namespace CardTowers_GameServer.Shine.Data
             }
         }
 
-        public virtual async Task<int> InsertAsync(TEntity entity)
+
+
+        public virtual async Task<Guid> InsertAsync(TEntity entity)
         {
             _logger.LogInformation($"Inserting entity into table {_tableName}");
             using var connection = new NpgsqlConnection(_connectionString);
@@ -76,7 +79,7 @@ namespace CardTowers_GameServer.Shine.Data
 
             try
             {
-                return await connection.ExecuteScalarAsync<int>(sql, entity);
+                return await connection.ExecuteScalarAsync<Guid>(sql, entity);
             }
             catch (Exception ex)
             {
@@ -84,6 +87,7 @@ namespace CardTowers_GameServer.Shine.Data
                 throw;
             }
         }
+
 
         public virtual async Task<bool> UpdateAsync(TEntity entity)
         {
@@ -106,6 +110,7 @@ namespace CardTowers_GameServer.Shine.Data
             }
         }
 
+
         public virtual async Task<bool> DeleteAsync(Guid id)
         {
             _logger.LogInformation($"Deleting entity with id {id} from table {_tableName}");
@@ -116,7 +121,7 @@ namespace CardTowers_GameServer.Shine.Data
 
             try
             {
-                var rowsAffected = await connection.ExecuteAsync(sql, new { Id = id });
+                var rowsAffected = await connection.ExecuteAsync(sql, new { id = id });
                 return rowsAffected > 0;
             }
             catch (Exception ex)
@@ -137,7 +142,7 @@ namespace CardTowers_GameServer.Shine.Data
 
             try
             {
-                var count = await connection.ExecuteScalarAsync<int>(sql, new { Id = id });
+                var count = await connection.ExecuteScalarAsync<int>(sql, new { id = id });
                 return count > 0;
             }
             catch (Exception ex)
@@ -146,6 +151,7 @@ namespace CardTowers_GameServer.Shine.Data
                 throw;
             }
         }
+
 
         public virtual async Task<int> CountAsync()
         {
@@ -203,21 +209,22 @@ namespace CardTowers_GameServer.Shine.Data
         protected string GetUpdateColumnNames()
         {
             var properties = typeof(TEntity).GetProperties()
-                            .Where(p => p.Name != "Id" && Regex.IsMatch(p.Name, @"^[\w]+$"));
+                            .Where(p => p.Name != "id" && Regex.IsMatch(p.Name, @"^[\w]+$"));
             return string.Join(", ", properties.Select(p => $"{p.Name} = @{p.Name}"));
         }
+
 
         protected string GetInsertColumnNames()
         {
             var properties = typeof(TEntity).GetProperties()
-                            .Where(p => p.Name != "Id" && Regex.IsMatch(p.Name, @"^[\w]+$"));
+                            .Where(p => p.Name != "id" && Regex.IsMatch(p.Name, @"^[\w]+$"));
             return string.Join(", ", properties.Select(p => p.Name));
         }
 
         protected string GetInsertParameterNames()
         {
             var properties = typeof(TEntity).GetProperties()
-                            .Where(p => p.Name != "Id" && Regex.IsMatch(p.Name, @"^[\w]+$"));
+                            .Where(p => p.Name != "id" && Regex.IsMatch(p.Name, @"^[\w]+$"));
             return string.Join(", ", properties.Select(p => $"@{p.Name}"));
         }
     }

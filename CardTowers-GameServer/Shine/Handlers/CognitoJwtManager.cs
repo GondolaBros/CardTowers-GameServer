@@ -81,6 +81,16 @@ namespace CardTowers_GameServer.Shine.Handlers
         }
 
 
+
+        public string? GetUsernameFromToken(string token)
+        {
+            var handler = new JwtSecurityTokenHandler();
+            var jwtToken = handler.ReadJwtToken(token);
+
+            return jwtToken.Claims.FirstOrDefault(c => c.Type == "cognito:username")?.Value;
+        }
+
+
         public string? GetSubjectFromToken(string token)
         {
             var handler = new JwtSecurityTokenHandler();

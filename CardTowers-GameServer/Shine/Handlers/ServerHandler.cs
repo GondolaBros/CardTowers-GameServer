@@ -8,6 +8,7 @@ using CardTowers_GameServer.Shine.Util;
 using CardTowers_GameServer.Shine.Models;
 using CardTowers_GameServer.Shine.Data.Repositories;
 using Microsoft.Extensions.Logging;
+using System.Numerics;
 
 namespace CardTowers_GameServer.Shine.Handlers
 {
@@ -231,21 +232,36 @@ namespace CardTowers_GameServer.Shine.Handlers
 
             if (isValid)
             {
-                // If the token is valid, get the "sub" claim which is the account id
-                string? accountId = cognitoJwtManager.GetSubjectFromToken(token);
+                Console.WriteLine($"Incoming client JWT is valid - accepted connection for player");
 
-                if (accountId != null)
+                try
                 {
-                    // Load or create the player account
-                    var player = await playerRepository.LoadOrCreatePlayerAccount(accountId);
-                    // TODO: Here you might want to associate the player with the connection somehow,
-                    // so you know which player is associated with each connection.
-                    // For example, you might want to create a dictionary where the key is the connection
-                    // and the value is the player.
 
-                    // Accept the connection
-                    request.Accept();
-                    Console.WriteLine($"Incoming client JWT is valid - accepted connection for player {player.AccountId}");
+                    // If the token is valid, get the "sub" claim which is the account id
+                    string? accountId = cognitoJwtManager.GetSubjectFromToken(token);
+
+                    if (accountId != null)
+                    {
+                        string? username = cognitoJwtManager.GetUsernameFromToken(token);
+
+                        if (username != null)
+                        {
+                            // Load or create the player account
+                            var player = await playerRepository.LoadOrCreatePlayerAccount(accountId, username);
+                            // TODO: Here you might want to associate the player with the connection somehow,
+                            // so you know which player is associated with each connection.
+                            // For example, you might want to create a dictionary where the key is the connection
+                            // and the value is the player.
+
+                            // Accept the connection
+                            request.Accept();
+                        }
+                    }
+
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine("Caught exception inside repository: " + e.Message.ToString());
                 }
             }
             else

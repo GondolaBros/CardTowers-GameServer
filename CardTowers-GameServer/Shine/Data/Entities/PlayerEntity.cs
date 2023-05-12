@@ -1,17 +1,19 @@
-﻿namespace CardTowers_GameServer.Shine.Data.Entities
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace CardTowers_GameServer.Shine.Data.Entities
 {
     public class PlayerEntity : IEntity
     {
-        public Guid Id { get; set; }
-        public string AccountId { get; set; }
-        public string DisplayName { get; set; }
-        public int TotalExperience { get; set; }
-        public int TotalWins { get; set; }
-        public int TotalLosses { get; set; }
-        public int TotalDraws { get; set; }
-        public int EloRating { get; set; }
-        public double MMR { get; set; }
-        public DateTime? LastPlayedAt { get; set; }
+        public Guid id { get; set; }
+        public string account_id { get; set; }
+        public string display_name { get; set; }
+        public int total_experience { get; set; }
+        public int total_wins { get; set; }
+        public int total_losses { get; set; }
+        public int total_draws { get; set; }
+        public int elo_rating { get; set; }
+        public double mmr { get; set; }
+        public DateTime? last_played_at { get; set; }
     }
 }
 

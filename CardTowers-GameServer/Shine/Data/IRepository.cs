@@ -8,11 +8,10 @@ namespace CardTowers_GameServer.Shine.Data
     {
         Task<TEntity> GetByPropertyAsync<TProperty>(Expression<Func<TEntity, TProperty>> property, TProperty value);
         Task<IEnumerable<TEntity>> GetPaginatedResultAsync(int currentPage, int pageSize = 10);
-        Task<int> InsertAsync(TEntity entity);
+        Task<Guid> InsertAsync(TEntity entity);
         Task<bool> UpdateAsync(TEntity entity);
         Task<bool> DeleteAsync(Guid id);
         Task<bool> ExistsAsync(Guid id);
         Task<int> CountAsync();
     }
-
 }
