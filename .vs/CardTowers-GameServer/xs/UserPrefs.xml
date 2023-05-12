@@ -1,28 +1,38 @@
 ﻿<Properties StartupConfiguration="{FA529165-DDC7-483F-A005-4D78D44DC645}|Default">
-  <MultiItemStartupConfigurations />
+  <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug" />
+  <MonoDevelop.Ide.ItemProperties.CardTowers-GameServer PreferredExecutionTarget="MonoDevelop.Default" />
   <MonoDevelop.Ide.DebuggingService.Breakpoints>
     <BreakpointStore />
   </MonoDevelop.Ide.DebuggingService.Breakpoints>
+  <MultiItemStartupConfigurations />
   <MonoDevelop.Ide.DebuggingService.PinnedWatches />
-  <MonoDevelop.Ide.Workbench ActiveDocument="CardTowers-GameServer/Shine/Data/BaseRepository.cs">
+  <MonoDevelop.Ide.Workbench ActiveDocument="CardTowers-GameServer/Shine/Handlers/CognitoJwtManager.cs">
     <Files>
-      <File FileName="CardTowers-GameServer/Shine/Data/BaseRepository.cs" Line="101" Column="50" />
-      <File FileName="CardTowers-GameServer/Shine/Data/Entities/PlayerEntity.cs" Line="9" Column="49" />
-      <File FileName="CardTowers-GameServer/Shine/Data/IEntity.cs" Line="3" Column="29" />
+      <File FileName="CardTowers-GameServer/Shine/Handlers/ServerHandler.cs" Line="43" Column="62" />
+      <File FileName="CardTowers-GameServer/Shine/Handlers/MatchmakingHandler.cs" Line="72" Column="54" />
+      <File FileName="CardTowers-GameServer/Shine/Models/Player.cs" Line="1" Column="1" />
+      <File FileName="CardTowers-GameServer/Shine/Handlers/CognitoJwtManager.cs" Line="68" Column="1" />
     </Files>
     <Pads>
       <Pad Id="ProjectPad">
         <State name="__root__">
           <Node name="CardTowers-GameServer" expanded="True">
             <Node name="CardTowers-GameServer" expanded="True">
-              <Node name="Lib" expanded="True" />
+              <Node name="Lib" expanded="True">
+                <Node name="LiteNetLib" expanded="True">
+                  <Node name="Utils" expanded="True" />
+                </Node>
+              </Node>
               <Node name="Shine" expanded="True">
                 <Node name="Data" expanded="True">
                   <Node name="Entities" expanded="True" />
                   <Node name="Repositories" expanded="True" />
-                  <Node name="BaseRepository.cs" selected="True" />
                 </Node>
-                <Node name="Handlers" expanded="True" />
+                <Node name="Handlers" expanded="True">
+                  <Node name="CognitoJwtManager.cs" selected="True" />
+                </Node>
+                <Node name="Matchmaking" expanded="True" />
+                <Node name="Messages" expanded="True" />
                 <Node name="Models" expanded="True" />
                 <Node name="State" expanded="True" />
                 <Node name="Util" expanded="True" />
@@ -33,6 +43,4 @@
       </Pad>
     </Pads>
   </MonoDevelop.Ide.Workbench>
-  <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug" />
-  <MonoDevelop.Ide.ItemProperties.CardTowers-GameServer PreferredExecutionTarget="MonoDevelop.Default" />
 </Properties>

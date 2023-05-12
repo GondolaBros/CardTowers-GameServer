@@ -2,13 +2,14 @@
 using LiteNetLib.Utils;
 using CardTowers_GameServer.Shine.Interfaces;
 using CardTowers_GameServer.Shine.Matchmaking;
-using CardTowers_GameServer.Shine.Network;
 using CardTowers_GameServer.Shine.State;
 using CardTowers_GameServer.Shine.Util;
 using CardTowers_GameServer.Shine.Models;
 using CardTowers_GameServer.Shine.Data.Repositories;
 using Microsoft.Extensions.Logging;
 using System.Numerics;
+using CardTowers_GameServer.Shine.Data.Entities;
+using System.Collections.Concurrent;
 
 namespace CardTowers_GameServer.Shine.Handlers
 {
@@ -17,25 +18,32 @@ namespace CardTowers_GameServer.Shine.Handlers
         public EventBasedNetListener LiteNetListener;
         public NetManager LiteNetManager;
         public NetPacketProcessor PacketProcessor;
+
+        private MatchmakingHandler matchmakingHandler;
         private GameSessionHandler gameSessionManager;
         private CognitoJwtManager cognitoJwtManager;
         private PlayerRepository playerRepository;
 
+        private Dictionary<NetPeer, Player> connectedPlayers = new Dictionary<NetPeer, Player>();
+
         private volatile bool _isRunning;
+
+        ILogger logger;
+
 
         public ServerHandler()
         {
             var loggerFactory = LoggerFactory.Create(builder => { builder.AddConsole(); });
 
+            // Get an ILogger from the LoggerFactory
+            logger = loggerFactory.CreateLogger<ServerHandler>();
+
             PacketProcessor = new NetPacketProcessor();
             LiteNetListener = new EventBasedNetListener();
             LiteNetManager = new NetManager(LiteNetListener);
+            matchmakingHandler = new MatchmakingHandler(this, logger);
             gameSessionManager = new GameSessionHandler();
             cognitoJwtManager = new CognitoJwtManager(Constants.COGNITO_POOL_ID, Constants.COGNITO_REGION);
-
-            // Get an ILogger from the LoggerFactory
-            ILogger logger = loggerFactory.CreateLogger<ServerHandler>();
-
             playerRepository = new PlayerRepository(Constants.PGSQL_RDS_CONNECTION_STRING, logger);
 
             LiteNetListener.NetworkReceiveEvent += LiteNetListener_NetworkReceiveEvent;
@@ -43,27 +51,22 @@ namespace CardTowers_GameServer.Shine.Handlers
             LiteNetListener.PeerDisconnectedEvent += LiteNetListener_PeerDisconnectedEvent;
             LiteNetListener.ConnectionRequestEvent += LiteNetListener_ConnectionRequestEvent;
 
-            MatchmakingHandler.Instance.OnMatchFound += OnMatchFound;
-
+            matchmakingHandler.OnMatchFound += OnMatchFound;
+            NetEvents.OnMatchmakingEntryReceived += NetEvents_OnMatchmakingEntryReceived;
+            
             RegisterAndSubscribe<MatchmakingMessage>();
             RegisterAndSubscribe<GameCreatedMessage>();
             RegisterAndSubscribe<GameEndedMessagae>();
 
-            _ = PeriodicMatchmakingAsync();
-
-            Console.WriteLine("Started connection handler...");
-            Console.WriteLine("Started matchmaking handler...");
-            Console.WriteLine("Started game session handler...");
 
         }
-
-
+        
 
         public void Start(int port)
         {
             LiteNetManager.Start(port);
             IsRunning = true;
-            Console.WriteLine("ServerHandler listening on port: " + port);
+            logger.LogInformation("ServerHandler listening on port: " + port);
         }
 
 
@@ -80,7 +83,6 @@ namespace CardTowers_GameServer.Shine.Handlers
         }
 
 
-
         private void RegisterAndSubscribe<T>() where T : class, IHandledMessage, new()
         {
             PacketProcessor.SubscribeReusable<T, NetPeer>(OnMessageReceived);
@@ -94,7 +96,6 @@ namespace CardTowers_GameServer.Shine.Handlers
             PacketProcessor.Write(writer, message);
             peer.Send(writer, DeliveryMethod.ReliableOrdered);
         }
-
 
 
         public NetPeer? GetPeerById(int id)
@@ -114,12 +115,36 @@ namespace CardTowers_GameServer.Shine.Handlers
         }
 
 
+        private void NetEvents_OnMatchmakingEntryReceived(MatchmakingEntryReceivedEventArgs obj)
+        {
+            // If this peer is already connected
+            Player player;
+            if (connectedPlayers.TryGetValue(obj.Peer, out player))
+            {
+
+                MatchmakingParameters parameters = new MatchmakingParameters();
+                parameters.EloRating = player.Entity.elo_rating;
+                parameters.Username = player.Entity.display_name;
+
+                MatchmakingEntry matchmakingEntry =
+                    new MatchmakingEntry(player, parameters);
+
+                matchmakingHandler.Enqueue(matchmakingEntry);
+            }
+            else
+            {
+                // handle error...
+            }
+        }
+
+
+
         private void OnMatchFound(object? sender, MatchFoundEventArgs e)
         {
-            Console.WriteLine("Matchmaker found match for: " + e.Player1.Peer.Id
-                + " | " + e.Player2.Peer.Id);
+            logger.LogInformation("Matchmaker found match for: " + e.P1.Player.Peer.Id
+                + " | " + e.P2.Player.Peer.Id);
 
-            GameSession newGameSession = new GameSession(e.Player1, e.Player2);
+            GameSession newGameSession = new GameSession(e.P1, e.P2);
             newGameSession.OnGameSessionStopped += OnGameSessionStopped;
             newGameSession.Start();
 
@@ -128,8 +153,8 @@ namespace CardTowers_GameServer.Shine.Handlers
             gameCreatedMessage.ElapsedTicks = newGameSession.GetElapsedTime();
             gameCreatedMessage.Id = newGameSession.Id;
 
-            SendMessage(gameCreatedMessage, e.Player1.Peer);
-            SendMessage(gameCreatedMessage, e.Player2.Peer);
+            SendMessage(gameCreatedMessage, e.P1.Player.Peer);
+            SendMessage(gameCreatedMessage, e.P2.Player.Peer);
         }
 
 
@@ -149,16 +174,10 @@ namespace CardTowers_GameServer.Shine.Handlers
 
             gameSession.Cleanup();
 
-            Console.WriteLine("OnGameSessionStopped: " + gameSession.Id + " |Elapsed seconds: " + totalSeconds);
+            logger.LogInformation("OnGameSessionStopped: " + gameSession.Id + " |Elapsed seconds: " + totalSeconds);
 
             gameSessionManager.RemoveGameSession(gameSession);
             Console.WriteLine("Total game sessions running: " + gameSessionManager.Count());
-        }
-
-
-        public async Task PeriodicMatchmakingAsync()
-        {
-            await MatchmakingHandler.Instance.PeriodicMatchmakingAsync();
         }
 
 
@@ -177,16 +196,16 @@ namespace CardTowers_GameServer.Shine.Handlers
         private void LiteNetListener_PeerConnectedEvent(NetPeer peer)
         {
             // TODO: what now in peerconnectedevent
-            Console.WriteLine("ConnectionHandler | PeerConnectedEvent: " + peer.EndPoint.ToString());
+            //Console.WriteLine("ConnectionHandler | PeerConnectedEvent: " + peer.EndPoint.ToString());
         }
 
 
         private void LiteNetListener_PeerDisconnectedEvent(NetPeer peer, DisconnectInfo disconnectInfo)
         {
-           Console.WriteLine("ServerHandler | PeerDisconnectedEvent: " + disconnectInfo.Reason + " | " + peer.Id);
+            logger.LogInformation("ServerHandler | PeerDisconnectedEvent: " + disconnectInfo.Reason + " | " + peer.Id);
 
-           if (peer != null)
-           {
+            if (peer != null)
+            {
                 // Check if they were in a game
                 GameSession gameSession = gameSessionManager.GetGameSessionByPlayerId(peer.Id);
 
@@ -196,18 +215,21 @@ namespace CardTowers_GameServer.Shine.Handlers
                     Player? p = gameSession.PlayerSessions.Find(p => p.Peer.Id == peer.Id);
 
                     if (p != null)
-                    { 
+                    {
+                        // right now call player disconnected. itll handle game session
+                        // eventually we should rename this to like
+                        // cleanupgamesesison or sumn along the lines xd
                         gameSession.PlayerDisconnected(p);
                     }
-
                 }
 
+
                 // Check if they were matchmaking
-                MatchmakingEntry? potentialEntry = MatchmakingHandler.Instance.GetMatchmakingEntryById(peer.Id);
+                MatchmakingEntry? potentialEntry = matchmakingHandler.GetMatchmakingEntryById(peer.Id);
 
                 if (potentialEntry != null)
                 {
-                    MatchmakingHandler.Instance.TryRemove(potentialEntry);
+                    matchmakingHandler.TryRemove(potentialEntry);
                 }
             }
         }
@@ -215,7 +237,7 @@ namespace CardTowers_GameServer.Shine.Handlers
 
         private async void OnConnectionRequestAsync(ConnectionRequest request)
         {
-            // Assuming the JWT token is sent as a string in the ConnectionRequest's Data
+            // The client sends the jwt as a string from client connection request
             string token = request.Data.GetString();
 
             // Validate the token
@@ -224,44 +246,31 @@ namespace CardTowers_GameServer.Shine.Handlers
             if (isValid)
             {
                 Console.WriteLine($"Incoming client JWT is valid - accepted connection for player");
+               
+                // If the token is valid, get the "sub" claim which is the account id
+                string? accountId = cognitoJwtManager.GetSubjectFromToken(token);
 
-                try
+                if (accountId != null)
                 {
+                    string? username = cognitoJwtManager.GetUsernameFromToken(token);
 
-                    // If the token is valid, get the "sub" claim which is the account id
-                    string? accountId = cognitoJwtManager.GetSubjectFromToken(token);
-
-                    if (accountId != null)
+                    if (username != null)
                     {
-                        string? username = cognitoJwtManager.GetUsernameFromToken(token);
+                        var playerEntity = await playerRepository.LoadOrCreatePlayerAccount(accountId, username);
 
-                        if (username != null)
-                        {
-                            // Load or create the player account
-                            var player = await playerRepository.LoadOrCreatePlayerAccount(accountId, username);
-                            // TODO: Here you might want to associate the player with the connection somehow,
-                            // so you know which player is associated with each connection.
-                            // For example, you might want to create a dictionary where the key is the connection
-                            // and the value is the player.
+                        NetPeer peer = request.Accept();
+                        Player player = new Player(peer, playerEntity);
 
-                            // Accept the connection
-                            request.Accept();
-                        }
+                        connectedPlayers.Add(peer, player);
+                        
+                        return;
                     }
+                }
+            }
 
-                }
-                catch (Exception e)
-                {
-                    Console.WriteLine("Caught exception inside repository: " + e.Message.ToString());
-                }
-            }
-            else
-            {
-                // If the token is not valid, reject the connection
-                request.Reject();
-            }
+            // reject on any case, no exceptins - this is critical!
+            request.Reject();
         }
-
 
 
         private void LiteNetListener_ConnectionRequestEvent(ConnectionRequest request)

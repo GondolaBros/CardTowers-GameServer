@@ -10,7 +10,6 @@ namespace CardTowers_GameServer.Shine.Data.Repositories
         {
         }
 
-
         public async Task<PlayerEntity> LoadOrCreatePlayerAccount(string accountId, string username)
         {
             var player = await GetByPropertyAsync(p => p.account_id, accountId);

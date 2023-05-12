@@ -22,7 +22,7 @@ namespace CardTowers_GameServer.Shine.State
 
             PlayerSessions = new List<Player>(Constants.MAX_PLAYERS_STANDARD_MULTIPLAYER);
 
-            PlayerData p1Data = new PlayerData();
+            /*PlayerData p1Data = new PlayerData();
             p1Data.Username = e1.Parameters.Username;
             Player p1 = new Player(e1.Peer, p1Data);
 
@@ -31,7 +31,7 @@ namespace CardTowers_GameServer.Shine.State
             Player p2 = new Player(e2.Peer, p2Data);
 
             PlayerSessions.Add(p1);
-            PlayerSessions.Add(p2);
+            PlayerSessions.Add(p2);*/
 
             ServerStopwatch = new Stopwatch();
         }
@@ -46,7 +46,7 @@ namespace CardTowers_GameServer.Shine.State
         public void Start()
         {
             Console.WriteLine("Started game session: " + Id
-                + " | Players: " + PlayerSessions[0].Data.Username + " | " + PlayerSessions[1].Data.Username);
+                + " | Players: " + PlayerSessions[0].Entity.display_name + " | " + PlayerSessions[1].Entity.display_name);
 
             ServerStopwatch = Stopwatch.StartNew();
         }
@@ -64,7 +64,7 @@ namespace CardTowers_GameServer.Shine.State
             WinnerId = winner.Peer.Id;
 
             Console.WriteLine("Game session stopped: " + Id);
-            Console.WriteLine(winner.Data.Username + " is the winner!");
+            Console.WriteLine(winner.Entity.display_name + " is the winner!");
             Console.WriteLine("Cleaning up game session, send final state to clients.");
 
             OnGameSessionStopped(this);
@@ -77,10 +77,10 @@ namespace CardTowers_GameServer.Shine.State
         }
 
 
+
         public void PlayerDisconnected(Player player)
         {
-
-            Console.WriteLine("GameSession: PlayerDisconnected: " + player.Data.Username);
+            Console.WriteLine("GameSession: PlayerDisconnected: " + player.Entity.display_name);
 
             // Handle player disconnection, possibly end the game and declare the other player as the winner.
             // Remove the player from the session

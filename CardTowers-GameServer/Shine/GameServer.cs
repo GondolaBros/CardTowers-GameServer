@@ -13,7 +13,6 @@ namespace CardTowers_GameServer.Shine
         public GameServer()
         {
             serverHandler = new ServerHandler();
-            MatchmakingHandler.Instance.SetServerHandler(serverHandler);
         }
 
         public async Task Run()

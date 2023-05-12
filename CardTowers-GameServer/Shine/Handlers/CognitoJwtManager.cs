@@ -35,6 +35,7 @@ namespace CardTowers_GameServer.Shine.Handlers
                 return _keysCache;
             }
         }
+        
 
         public async Task<bool> ValidateTokenAsync(string token)
         {
@@ -49,7 +50,7 @@ namespace CardTowers_GameServer.Shine.Handlers
                 ValidIssuer = $"https://cognito-idp.{_region}.amazonaws.com/{_userPoolId}",
                 ValidateLifetime = true,
                 IssuerSigningKeys = keys,
-                ValidateAudience = false, // Depends on your needs - you might want to validate this
+                ValidateAudience = false,
             };
 
             try
@@ -79,7 +80,6 @@ namespace CardTowers_GameServer.Shine.Handlers
                 return false;
             }
         }
-
 
 
         public string? GetUsernameFromToken(string token)
