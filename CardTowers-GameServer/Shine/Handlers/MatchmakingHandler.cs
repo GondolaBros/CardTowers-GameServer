@@ -27,6 +27,7 @@ namespace CardTowers_GameServer.Shine.Handlers
         }
 
 
+
         public void Enqueue(MatchmakingEntry entry)
         {
             lock (_queueLock)
@@ -44,6 +45,7 @@ namespace CardTowers_GameServer.Shine.Handlers
             // Start matchmaking for this player
             StartMatchmakingForPlayer(entry);
         }
+
 
 
         private void StartMatchmakingForPlayer(MatchmakingEntry player)
@@ -157,20 +159,20 @@ namespace CardTowers_GameServer.Shine.Handlers
         }
 
 
-        public int Count()
-        {
-            lock (_queueLock)
-            {
-                return _queue.Count;
-            }
-        }
-
-
         public MatchmakingEntry? GetMatchmakingEntryById(int id)
         {
             lock (_queueLock)
             {
                 return _queue.Find(p => p.Player.Peer.Id == id);
+            }
+        }
+
+
+        public int Count()
+        {
+            lock (_queueLock)
+            {
+                return _queue.Count;
             }
         }
     }

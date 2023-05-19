@@ -20,6 +20,7 @@ namespace CardTowers_GameServer.Shine.Handlers
             _region = region;
         }
 
+
         private async Task<List<JsonWebKey>> FetchJsonWebKeysAsync()
         {
             if (_keysCache != null && DateTime.UtcNow < _cacheExpiration)

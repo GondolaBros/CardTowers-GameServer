@@ -57,8 +57,6 @@ namespace CardTowers_GameServer.Shine.Handlers
             RegisterAndSubscribe<MatchmakingMessage>();
             RegisterAndSubscribe<GameCreatedMessage>();
             RegisterAndSubscribe<GameEndedMessagae>();
-
-
         }
         
 
@@ -90,7 +88,7 @@ namespace CardTowers_GameServer.Shine.Handlers
         }
 
 
-        public void SendMessage<T>(T message, NetPeer peer) where T : class, INetSerializable, new()
+        public void SendMessage<T>(T message, NetPeer peer) where T : class, IHandledMessage, new()
         {
             NetDataWriter writer = new NetDataWriter();
             PacketProcessor.Write(writer, message);
@@ -231,6 +229,8 @@ namespace CardTowers_GameServer.Shine.Handlers
                 {
                     matchmakingHandler.TryRemove(potentialEntry);
                 }
+
+                connectedPlayers.Remove(peer);
             }
         }
 
