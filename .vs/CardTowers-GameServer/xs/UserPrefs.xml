@@ -1,34 +1,18 @@
 ﻿<Properties StartupConfiguration="{FA529165-DDC7-483F-A005-4D78D44DC645}|Default">
-  <MultiItemStartupConfigurations />
-  <MonoDevelop.Ide.DebuggingService.PinnedWatches />
   <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug" />
-  <MonoDevelop.Ide.Workbench ActiveDocument="CardTowers-GameServer/Shine/Handlers/MatchmakingHandler.cs">
-    <Files>
-      <File FileName="CardTowers-GameServer/Shine/Handlers/ServerHandler.cs" Line="90" Column="1" />
-      <File FileName="CardTowers-GameServer/Shine/Handlers/MatchmakingHandler.cs" Line="27" Column="10" />
-      <File FileName="CardTowers-GameServer/Shine/Models/Player.cs" Line="1" Column="1" />
-      <File FileName="CardTowers-GameServer/Shine/Handlers/CognitoJwtManager.cs" Line="1" Column="1" />
-      <File FileName="CardTowers-GameServer/Shine/Data/Entities/PlayerEntity.cs" Line="1" Column="1" />
-      <File FileName="CardTowers-GameServer/Shine/Messages/IHandledMessage.cs" Line="7" Column="52" />
-    </Files>
+  <MonoDevelop.Ide.Workbench>
     <Pads>
       <Pad Id="ProjectPad">
         <State name="__root__">
           <Node name="CardTowers-GameServer" expanded="True">
             <Node name="CardTowers-GameServer" expanded="True">
-              <Node name="Lib" expanded="True">
-                <Node name="LiteNetLib" expanded="True">
-                  <Node name="Utils" expanded="True" />
-                </Node>
-              </Node>
+              <Node name="Lib" expanded="True" />
               <Node name="Shine" expanded="True">
                 <Node name="Data" expanded="True">
                   <Node name="Entities" expanded="True" />
                   <Node name="Repositories" expanded="True" />
                 </Node>
-                <Node name="Handlers" expanded="True">
-                  <Node name="MatchmakingHandler.cs" selected="True" />
-                </Node>
+                <Node name="Handlers" expanded="True" />
                 <Node name="Matchmaking" expanded="True" />
                 <Node name="Messages" expanded="True" />
                 <Node name="Models" expanded="True" />
@@ -41,8 +25,10 @@
       </Pad>
     </Pads>
   </MonoDevelop.Ide.Workbench>
-  <MonoDevelop.Ide.ItemProperties.CardTowers-GameServer PreferredExecutionTarget="MonoDevelop.Default" />
+  <MonoDevelop.Ide.DebuggingService.PinnedWatches />
   <MonoDevelop.Ide.DebuggingService.Breakpoints>
     <BreakpointStore />
   </MonoDevelop.Ide.DebuggingService.Breakpoints>
+  <MultiItemStartupConfigurations />
+  <MonoDevelop.Ide.ItemProperties.CardTowers-GameServer PreferredExecutionTarget="MonoDevelop.Default" />
 </Properties>
