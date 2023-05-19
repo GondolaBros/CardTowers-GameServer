@@ -1,9 +1,9 @@
 ﻿using LiteNetLib;
 using LiteNetLib.Utils;
-using CardTowers_GameServer.Shine.Interfaces;
 using CardTowers_GameServer.Shine.Handlers;
 using CardTowers_GameServer.Shine.Matchmaking;
 using CardTowers_GameServer.Shine.Util;
+using CardTowers_GameServer.Shine.Messages;
 
 public class MatchmakingMessage : IHandledMessage
 {

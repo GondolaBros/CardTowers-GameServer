@@ -1,4 +1,4 @@
-﻿using CardTowers_GameServer.Shine.Interfaces;
+﻿using CardTowers_GameServer.Shine.Messages;
 using LiteNetLib;
 using LiteNetLib.Utils;
 

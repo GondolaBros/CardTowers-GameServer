@@ -5,7 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using CardTowers_GameServer.Shine.Interfaces;
+using CardTowers_GameServer.Shine.Messages;
 
 public class GameEndedMessagae : IHandledMessage
 {

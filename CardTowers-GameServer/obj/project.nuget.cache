@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "1Q6aOVDvYF7KbKBUFaUqQmjF8ET3IJEwsBpvHYQukNFHhsDpMdVpwTfa9ChXHxrgIuNEvwzBzwh1cqGJHjRnpw==",
+  "dgSpecHash": "Hq1EmqAcA12o8j6WZO6HfEhAoD0Jrv9VLiET0y7rVV2voGZRsOAb5mgLM4WlcqKEesUWbLiOQ7XmkIpEmiWCqQ==",
   "success": true,
-  "projectFilePath": "/Users/devontomlin/Documents/Repos/CardTowers-GameServer/CardTowers-GameServer/CardTowers-GameServer.csproj",
+  "projectFilePath": "/Users/devontomlin/Documents/GitHub/CardTowers-GameServer/CardTowers-GameServer/CardTowers-GameServer.csproj",
   "expectedPackageFiles": [
     "/Users/devontomlin/.nuget/packages/dapper/2.0.123/dapper.2.0.123.nupkg.sha512",
     "/Users/devontomlin/.nuget/packages/microsoft.csharp/4.5.0/microsoft.csharp.4.5.0.nupkg.sha512",

@@ -1485,11 +1485,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "/Users/devontomlin/Documents/Repos/CardTowers-GameServer/CardTowers-GameServer/CardTowers-GameServer.csproj",
+      "projectUniqueName": "/Users/devontomlin/Documents/GitHub/CardTowers-GameServer/CardTowers-GameServer/CardTowers-GameServer.csproj",
       "projectName": "CardTowers-GameServer",
-      "projectPath": "/Users/devontomlin/Documents/Repos/CardTowers-GameServer/CardTowers-GameServer/CardTowers-GameServer.csproj",
+      "projectPath": "/Users/devontomlin/Documents/GitHub/CardTowers-GameServer/CardTowers-GameServer/CardTowers-GameServer.csproj",
       "packagesPath": "/Users/devontomlin/.nuget/packages/",
-      "outputPath": "/Users/devontomlin/Documents/Repos/CardTowers-GameServer/CardTowers-GameServer/obj/",
+      "outputPath": "/Users/devontomlin/Documents/GitHub/CardTowers-GameServer/CardTowers-GameServer/obj/",
       "projectStyle": "PackageReference",
       "configFilePaths": [
         "/Users/devontomlin/.nuget/NuGet/NuGet.Config"

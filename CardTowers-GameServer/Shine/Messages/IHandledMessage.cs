@@ -2,7 +2,7 @@
 using LiteNetLib;
 using LiteNetLib.Utils;
 
-namespace CardTowers_GameServer.Shine.Interfaces
+namespace CardTowers_GameServer.Shine.Messages
 {
     public interface IHandledMessage : INetSerializable
     {

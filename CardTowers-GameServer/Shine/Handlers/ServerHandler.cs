@@ -1,6 +1,5 @@
 ﻿using LiteNetLib;
 using LiteNetLib.Utils;
-using CardTowers_GameServer.Shine.Interfaces;
 using CardTowers_GameServer.Shine.Matchmaking;
 using CardTowers_GameServer.Shine.State;
 using CardTowers_GameServer.Shine.Util;
@@ -10,6 +9,7 @@ using Microsoft.Extensions.Logging;
 using System.Numerics;
 using CardTowers_GameServer.Shine.Data.Entities;
 using System.Collections.Concurrent;
+using CardTowers_GameServer.Shine.Messages;
 
 namespace CardTowers_GameServer.Shine.Handlers
 {
@@ -53,7 +53,8 @@ namespace CardTowers_GameServer.Shine.Handlers
 
             matchmakingHandler.OnMatchFound += OnMatchFound;
             NetEvents.OnMatchmakingEntryReceived += NetEvents_OnMatchmakingEntryReceived;
-            
+
+            RegisterAndSubscribe<MatchFoundMessage>();
             RegisterAndSubscribe<MatchmakingMessage>();
             RegisterAndSubscribe<GameCreatedMessage>();
             RegisterAndSubscribe<GameEndedMessagae>();
@@ -142,17 +143,21 @@ namespace CardTowers_GameServer.Shine.Handlers
             logger.LogInformation("Matchmaker found match for: " + e.P1.Player.Peer.Id
                 + " | " + e.P2.Player.Peer.Id);
 
-            GameSession newGameSession = new GameSession(e.P1, e.P2);
-            newGameSession.OnGameSessionStopped += OnGameSessionStopped;
-            newGameSession.Start();
+            MatchFoundMessage matchFoundMessage = new MatchFoundMessage();
+            SendMessage(matchFoundMessage, e.P1.Player.Peer);
+            SendMessage(matchFoundMessage, e.P2.Player.Peer);
 
-            gameSessionManager.AddGameSession(newGameSession);
-            GameCreatedMessage gameCreatedMessage = new GameCreatedMessage();
-            gameCreatedMessage.ElapsedTicks = newGameSession.GetElapsedTime();
-            gameCreatedMessage.Id = newGameSession.Id;
+            //GameSession newGameSession = new GameSession(e.P1, e.P2);
+            //newGameSession.OnGameSessionStopped += OnGameSessionStopped;
+            //newGameSession.Start();
 
-            SendMessage(gameCreatedMessage, e.P1.Player.Peer);
-            SendMessage(gameCreatedMessage, e.P2.Player.Peer);
+            //gameSessionManager.AddGameSession(newGameSession);
+            //GameCreatedMessage gameCreatedMessage = new GameCreatedMessage();
+            //gameCreatedMessage.ElapsedTicks = newGameSession.GetElapsedTime();
+            //gameCreatedMessage.Id = newGameSession.Id;
+
+            //SendMessage(gameCreatedMessage, e.P1.Player.Peer);
+            //SendMessage(gameCreatedMessage, e.P2.Player.Peer);
         }
 
 
