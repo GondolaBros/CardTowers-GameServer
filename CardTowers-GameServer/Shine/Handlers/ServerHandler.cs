@@ -195,6 +195,8 @@ namespace CardTowers_GameServer.Shine.Handlers
         {
             // TODO: what now in peerconnectedevent
             //Console.WriteLine("ConnectionHandler | PeerConnectedEvent: " + peer.EndPoint.ToString());
+
+            //
         }
 
 
