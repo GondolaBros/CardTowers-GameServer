@@ -24,20 +24,18 @@ namespace CardTowers_GameServer.Shine.State
 
         public GameSession(Player p1, Player p2)
         {
+            ServerStopwatch = Stopwatch.StartNew();
+            lastTickTime = ServerStopwatch.ElapsedMilliseconds;
+
             Id = Guid.NewGuid().ToString();
 
             PlayerSessions = new List<Player>(Constants.MAX_PLAYERS_STANDARD_MULTIPLAYER);
             PlayerSessions.Add(p1);
             PlayerSessions.Add(p2);
 
-            ServerStopwatch = new Stopwatch();
-
-            //Player1State = new GameState();
-            //Player2State = new GameState();
             Player1State = new PlayerState(p1, new GameMap());
             Player2State = new PlayerState(p2, new GameMap());
 
-            lastTickTime = ServerStopwatch.ElapsedMilliseconds;
             accumulatedDeltaTime = 0;
         }
 
@@ -88,15 +86,6 @@ namespace CardTowers_GameServer.Shine.State
         }
 
 
-        public void Start()
-        {
-            Console.WriteLine("Started game session: " + Id
-                + " | Players: " + PlayerSessions[0].Entity.display_name + " | " + PlayerSessions[1].Entity.display_name);
-
-            ServerStopwatch = Stopwatch.StartNew();
-        }
-
-
         public void Cleanup()
         {
             PlayerSessions.Clear();
@@ -120,7 +109,6 @@ namespace CardTowers_GameServer.Shine.State
         {
             return PlayerSessions.Exists(p => p.Peer.Id == id);
         }
-
 
 
         public void PlayerDisconnected(Player player)

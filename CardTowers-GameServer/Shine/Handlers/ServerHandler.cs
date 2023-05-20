@@ -160,14 +160,11 @@ namespace CardTowers_GameServer.Shine.Handlers
                 {
                     GameSession newGameSession = new GameSession(p1, p2);
                     newGameSession.OnGameSessionStopped += OnGameSessionStopped;
-                    newGameSession.Start();
 
                     gameSessionHandler.AddSession(newGameSession);
                     GameCreatedMessage gameCreatedMessage = new GameCreatedMessage();
                     gameCreatedMessage.ElapsedTicks = newGameSession.GetElapsedTime();
                     gameCreatedMessage.Id = newGameSession.Id;
-
-                    logger.LogInformation("Created game session objects");
 
                     SendMessage(gameCreatedMessage, GetPeerById(e.P1.Parameters.Id), false);
                     SendMessage(gameCreatedMessage, GetPeerById(e.P2.Parameters.Id), false);
