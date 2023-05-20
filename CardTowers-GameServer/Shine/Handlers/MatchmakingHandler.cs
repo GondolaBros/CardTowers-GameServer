@@ -19,6 +19,7 @@ namespace CardTowers_GameServer.Shine.Handlers
 
         ILogger logger;
 
+
         public MatchmakingHandler(ServerHandler serverHandler, ILogger logger)
         {
             _queue = new List<MatchmakingEntry>();
@@ -32,30 +33,37 @@ namespace CardTowers_GameServer.Shine.Handlers
         {
             lock (_queueLock)
             {
-                int index = _queue.BinarySearch(entry, new PlayerEloComparer());
-                if (index < 0)
+                if (!playerMatchmakingTasks.ContainsKey(entry.Parameters.Id))
                 {
-                    index = ~index;
+                    int index = _queue.BinarySearch(entry, new PlayerEloComparer());
+                    if (index < 0)
+                    {
+                        index = ~index;
+                    }
+                    _queue.Insert(index, entry);
+
+                    logger.LogInformation("Added player entry to matchmaking queue: " + entry.Parameters.Username + " | Count: " + _queue.Count);
+
+                    // Start matchmaking for this player
+                    StartMatchmakingForPlayer(entry);
                 }
-                _queue.Insert(index, entry);
-
-                logger.LogInformation("Added player entry to matchmaking queue: " + entry.Parameters.Username + " | Count: " + _queue.Count);
+                else
+                {
+                    logger.LogInformation("Player " + entry.Parameters.Username + " is already in matchmaking process");
+                }
             }
-
-            // Start matchmaking for this player
-            StartMatchmakingForPlayer(entry);
         }
 
 
 
-        private void StartMatchmakingForPlayer(MatchmakingEntry player)
+        private void StartMatchmakingForPlayer(MatchmakingEntry entry)
         {
             // Create a cancellation token source and add it to the dictionary
             var cts = new CancellationTokenSource();
-            playerMatchmakingTasks[player.Player.Peer.Id] = cts;
+            playerMatchmakingTasks[entry.Parameters.Id] = cts;
 
             // Start a task to matchmake this player
-            Task.Run(() => MatchmakePlayer(player, cts.Token));
+            Task.Run(() => MatchmakePlayer(entry, cts.Token));
         }
 
 
@@ -66,6 +74,18 @@ namespace CardTowers_GameServer.Shine.Handlers
                 var opponent = FindMatch(player, MaxEloDifference);
                 if (opponent != null)
                 {
+                    lock (_queueLock)
+                    {
+                        // Ensure player and opponent aren't already matched
+                        if (player.IsMatched || opponent.IsMatched)
+                        {
+                            return;
+                        }
+
+                        player.IsMatched = true;
+                        opponent.IsMatched = true;
+                    }
+
                     // Match found, trigger the event
                     MatchFoundEventArgs args = new MatchFoundEventArgs(player, opponent);
                     OnMatchFound?.Invoke(this, args);
@@ -73,8 +93,8 @@ namespace CardTowers_GameServer.Shine.Handlers
                     // Remove players from the queue and stop matchmaking for them
                     if (TryRemove(player) && TryRemove(opponent))
                     {
-                        StopMatchmakingForPlayer(player.Player.Peer.Id);
-                        StopMatchmakingForPlayer(opponent.Player.Peer.Id);
+                        StopMatchmakingForPlayer(player.Parameters.Id);
+                        StopMatchmakingForPlayer(opponent.Parameters.Id);
                     }
                     return; // Match found, end this task
                 }
@@ -84,7 +104,6 @@ namespace CardTowers_GameServer.Shine.Handlers
                 }
             }
         }
-
 
 
         public MatchmakingEntry? FindMatch(MatchmakingEntry entry, int maxEloDifference)
@@ -100,7 +119,7 @@ namespace CardTowers_GameServer.Shine.Handlers
 
             for (int i = index - 1; i >= 0 && entry.Parameters.EloRating - _queue[i].Parameters.EloRating <= maxEloDifference; i--)
             {
-                if (_queue[i].Player.Peer.Id == entry.Player.Peer.Id)
+                if (_queue[i].Parameters.Id == entry.Parameters.Id || _queue[i].IsMatched)
                 {
                     continue;
                 }
@@ -115,7 +134,7 @@ namespace CardTowers_GameServer.Shine.Handlers
 
             for (int i = index; i < _queue.Count && _queue[i].Parameters.EloRating - entry.Parameters.EloRating <= maxEloDifference; i++)
             {
-                if (_queue[i].Player.Peer.Id == entry.Player.Peer.Id)
+                if (_queue[i].Parameters.Id == entry.Parameters.Id || _queue[i].IsMatched)
                 {
                     continue;
                 }
@@ -132,38 +151,47 @@ namespace CardTowers_GameServer.Shine.Handlers
         }
 
 
+
+
         private void StopMatchmakingForPlayer(int playerId)
         {
             if (playerMatchmakingTasks.TryRemove(playerId, out var cts))
             {
                 // If we found a matchmaking task for this player, we cancel it
                 cts.Cancel();
+                var entry = GetMatchmakingEntryById(playerId);
+                if (entry != null)
+                {
+                    entry.IsMatched = false;
+                }
             }
         }
 
 
-        public bool TryRemove(MatchmakingEntry player)
+
+        public bool TryRemove(MatchmakingEntry entry)
         {
             lock (_queueLock)
             {
-                bool removed = _queue.Remove(player);
-                logger.LogInformation("Removed player entry from matchmaking queue: " + player.Parameters.Username + ": " + removed);
+                bool removed = _queue.Remove(entry);
+                logger.LogInformation("Removed player entry from matchmaking queue: " + entry.Parameters.Username + ": " + removed);
                 if (removed)
                 {
                     // If the player was successfully removed from the queue, we also stop his matchmaking task
-                    StopMatchmakingForPlayer(player.Player.Peer.Id);
+                    entry.IsMatched = false;
+                    StopMatchmakingForPlayer(entry.Parameters.Id);
                 }
-
                 return removed;
             }
         }
+
 
 
         public MatchmakingEntry? GetMatchmakingEntryById(int id)
         {
             lock (_queueLock)
             {
-                return _queue.Find(p => p.Player.Peer.Id == id);
+                return _queue.Find(p => p.Parameters.Id == id);
             }
         }
 

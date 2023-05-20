@@ -15,6 +15,7 @@ namespace CardTowers_GameServer.Shine
             serverHandler = new ServerHandler();
         }
 
+
         public async Task Run()
         {
             serverHandler.Start(3456);
@@ -22,6 +23,8 @@ namespace CardTowers_GameServer.Shine
             while (serverHandler.IsRunning)
             {
                 serverHandler.Poll();
+                serverHandler.Update();
+
                 await Task.Delay(15);
             }
         }

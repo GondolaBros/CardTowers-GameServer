@@ -14,26 +14,71 @@ namespace CardTowers_GameServer.Shine.State
         public List<Player> PlayerSessions { get; private set; }
         public event Action<GameSession> OnGameSessionStopped;
 
+        public PlayerState Player1State { get; private set; }
+        public PlayerState Player2State { get; private set; }
+
+        private long lastTickTime;
+        private long accumulatedDeltaTime;
+
         public int WinnerId { get; private set; }
 
-        public GameSession(MatchmakingEntry e1, MatchmakingEntry e2)
+        public GameSession(Player p1, Player p2)
         {
             Id = Guid.NewGuid().ToString();
 
             PlayerSessions = new List<Player>(Constants.MAX_PLAYERS_STANDARD_MULTIPLAYER);
-
-            /*PlayerData p1Data = new PlayerData();
-            p1Data.Username = e1.Parameters.Username;
-            Player p1 = new Player(e1.Peer, p1Data);
-
-            PlayerData p2Data = new PlayerData();
-            p2Data.Username = e2.Parameters.Username;
-            Player p2 = new Player(e2.Peer, p2Data);
-
             PlayerSessions.Add(p1);
-            PlayerSessions.Add(p2);*/
+            PlayerSessions.Add(p2);
 
             ServerStopwatch = new Stopwatch();
+
+            //Player1State = new GameState();
+            //Player2State = new GameState();
+            Player1State = new PlayerState(p1, new GameMap());
+            Player2State = new PlayerState(p2, new GameMap());
+
+            lastTickTime = ServerStopwatch.ElapsedMilliseconds;
+            accumulatedDeltaTime = 0;
+        }
+
+
+
+        public void Update()
+        {
+            // Calculate delta time
+            long currentTickTime = ServerStopwatch.ElapsedMilliseconds;
+            long deltaTime = currentTickTime - lastTickTime;
+            lastTickTime = currentTickTime;
+
+            // Accumulate delta time
+            accumulatedDeltaTime += deltaTime;
+
+            // If enough time has passed, increase Elixir
+            if (accumulatedDeltaTime >= Constants.ELIXIR_GENERATION_INTERVAL_MS)
+            {
+                Player1State.AddElixir(Constants.ELIXIR_PER_INTERVAL);
+                Player2State.AddElixir(Constants.ELIXIR_PER_INTERVAL);
+
+                accumulatedDeltaTime -= Constants.ELIXIR_GENERATION_INTERVAL_MS;
+            }
+        }
+
+
+        public void UpdateGameState(Player player, DeltaState deltaState)
+        {
+            // Get the appropriate PlayerState instance based on the player
+            PlayerState playerState = player == PlayerSessions[0] ? Player1State : Player2State;
+
+            // Apply delta state to the player state
+            try
+            {
+                deltaState.Apply(playerState);
+            }
+            catch (Exception e)
+            {
+                // Handle the exception (for example, if the player doesn't have enough elixir to play the card)
+                Console.WriteLine($"Error applying delta state: {e.Message}");
+            }
         }
 
 

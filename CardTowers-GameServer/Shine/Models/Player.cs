@@ -15,6 +15,7 @@ namespace CardTowers_GameServer.Shine.Models
             this.Peer = peer;
             this.Entity = playerEntity;
         }
-    }
+
+    }   
 }
 

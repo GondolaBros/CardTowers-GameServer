@@ -20,7 +20,7 @@ namespace CardTowers_GameServer.Shine.Handlers
         public NetPacketProcessor PacketProcessor;
 
         private MatchmakingHandler matchmakingHandler;
-        private GameSessionHandler gameSessionManager;
+        private GameSessionHandler gameSessionHandler;
         private CognitoJwtManager cognitoJwtManager;
         private PlayerRepository playerRepository;
 
@@ -42,7 +42,7 @@ namespace CardTowers_GameServer.Shine.Handlers
             LiteNetListener = new EventBasedNetListener();
             LiteNetManager = new NetManager(LiteNetListener);
             matchmakingHandler = new MatchmakingHandler(this, logger);
-            gameSessionManager = new GameSessionHandler();
+            gameSessionHandler = new GameSessionHandler();
             cognitoJwtManager = new CognitoJwtManager(Constants.COGNITO_POOL_ID, Constants.COGNITO_REGION);
             playerRepository = new PlayerRepository(Constants.PGSQL_RDS_CONNECTION_STRING, logger);
 
@@ -54,7 +54,6 @@ namespace CardTowers_GameServer.Shine.Handlers
             matchmakingHandler.OnMatchFound += OnMatchFound;
             NetEvents.OnMatchmakingEntryReceived += NetEvents_OnMatchmakingEntryReceived;
 
-            RegisterAndSubscribe<MatchFoundMessage>();
             RegisterAndSubscribe<MatchmakingMessage>();
             RegisterAndSubscribe<GameCreatedMessage>();
             RegisterAndSubscribe<GameEndedMessagae>();
@@ -82,6 +81,12 @@ namespace CardTowers_GameServer.Shine.Handlers
         }
 
 
+        public void Update()
+        {
+            this.gameSessionHandler.UpdateAllGameSessions();
+        }
+
+
         private void RegisterAndSubscribe<T>() where T : class, IHandledMessage, new()
         {
             PacketProcessor.SubscribeReusable<T, NetPeer>(OnMessageReceived);
@@ -89,15 +94,15 @@ namespace CardTowers_GameServer.Shine.Handlers
         }
 
 
-        public void SendMessage<T>(T message, NetPeer peer) where T : class, IHandledMessage, new()
+        public void SendMessage<T>(T message, NetPeer peer, bool sendUnreliable) where T : class, IHandledMessage, new()
         {
             NetDataWriter writer = new NetDataWriter();
             PacketProcessor.Write(writer, message);
-            peer.Send(writer, DeliveryMethod.ReliableOrdered);
+            peer.Send(writer, sendUnreliable ? DeliveryMethod.Unreliable : DeliveryMethod.ReliableOrdered);
         }
 
 
-        public NetPeer? GetPeerById(int id)
+        public NetPeer GetPeerById(int id)
         {
             return this.LiteNetManager.ConnectedPeerList.Find(p => p.Id == id);
         }
@@ -120,44 +125,59 @@ namespace CardTowers_GameServer.Shine.Handlers
             Player player;
             if (connectedPlayers.TryGetValue(obj.Peer, out player))
             {
-
                 MatchmakingParameters parameters = new MatchmakingParameters();
+                parameters.Id = player.Peer.Id;
                 parameters.EloRating = player.Entity.elo_rating;
                 parameters.Username = player.Entity.display_name;
 
                 MatchmakingEntry matchmakingEntry =
-                    new MatchmakingEntry(player, parameters);
+                    new MatchmakingEntry(parameters);
 
                 matchmakingHandler.Enqueue(matchmakingEntry);
             }
             else
             {
                 // handle error...
+
+
             }
         }
 
 
-
         private void OnMatchFound(object? sender, MatchFoundEventArgs e)
         {
-            logger.LogInformation("Matchmaker found match for: " + e.P1.Player.Peer.Id
-                + " | " + e.P2.Player.Peer.Id);
+            logger.LogInformation("Matchmaker found match for: " + e.P1.Parameters.Id
+                + " | " + e.P2.Parameters.Id);
 
-            MatchFoundMessage matchFoundMessage = new MatchFoundMessage();
-            SendMessage(matchFoundMessage, e.P1.Player.Peer);
-            SendMessage(matchFoundMessage, e.P2.Player.Peer);
+            Player? p1;
+            Player? p2;
 
-            //GameSession newGameSession = new GameSession(e.P1, e.P2);
-            //newGameSession.OnGameSessionStopped += OnGameSessionStopped;
-            //newGameSession.Start();
+            if (connectedPlayers.TryGetValue(GetPeerById(e.P1.Parameters.Id), out p1)
+                && connectedPlayers.TryGetValue(GetPeerById(e.P2.Parameters.Id), out p2))
+            {
+                // load dem into da bring
+                try
+                {
+                    GameSession newGameSession = new GameSession(p1, p2);
+                    newGameSession.OnGameSessionStopped += OnGameSessionStopped;
+                    newGameSession.Start();
 
-            //gameSessionManager.AddGameSession(newGameSession);
-            //GameCreatedMessage gameCreatedMessage = new GameCreatedMessage();
-            //gameCreatedMessage.ElapsedTicks = newGameSession.GetElapsedTime();
-            //gameCreatedMessage.Id = newGameSession.Id;
+                    gameSessionHandler.AddSession(newGameSession);
+                    GameCreatedMessage gameCreatedMessage = new GameCreatedMessage();
+                    gameCreatedMessage.ElapsedTicks = newGameSession.GetElapsedTime();
+                    gameCreatedMessage.Id = newGameSession.Id;
 
-            //SendMessage(gameCreatedMessage, e.P1.Player.Peer);
-            //SendMessage(gameCreatedMessage, e.P2.Player.Peer);
+                    logger.LogInformation("Created game session objects");
+
+                    SendMessage(gameCreatedMessage, GetPeerById(e.P1.Parameters.Id), false);
+                    SendMessage(gameCreatedMessage, GetPeerById(e.P2.Parameters.Id), false);
+                }
+
+                catch (Exception ex)
+                {
+                    logger.LogError("Found exception when trying to create game session: " + ex.ToString());
+                }
+            }
         }
 
 
@@ -169,7 +189,7 @@ namespace CardTowers_GameServer.Shine.Handlers
 
             foreach (Player p in gameSession.PlayerSessions)
             {
-                this.SendMessage(gameEnded, p.Peer);
+                this.SendMessage(gameEnded, p.Peer, false);
             }
 
             TimeSpan elapsedSpan = new TimeSpan(gameSession.GetElapsedTime());
@@ -177,10 +197,10 @@ namespace CardTowers_GameServer.Shine.Handlers
 
             gameSession.Cleanup();
 
-            logger.LogInformation("OnGameSessionStopped: " + gameSession.Id + " |Elapsed seconds: " + totalSeconds);
+            logger.LogInformation("OnGameSessionStopped: " + gameSession.Id + " | Elapsed seconds: " + totalSeconds);
 
-            gameSessionManager.RemoveGameSession(gameSession);
-            Console.WriteLine("Total game sessions running: " + gameSessionManager.Count());
+            gameSessionHandler.RemoveSession(gameSession);
+            logger.LogInformation("Total game sessions running: " + gameSessionHandler.Count());
         }
 
 
@@ -199,9 +219,7 @@ namespace CardTowers_GameServer.Shine.Handlers
         private void LiteNetListener_PeerConnectedEvent(NetPeer peer)
         {
             // TODO: what now in peerconnectedevent
-            //Console.WriteLine("ConnectionHandler | PeerConnectedEvent: " + peer.EndPoint.ToString());
 
-            //
         }
 
 
@@ -212,7 +230,7 @@ namespace CardTowers_GameServer.Shine.Handlers
             if (peer != null)
             {
                 // Check if they were in a game
-                GameSession gameSession = gameSessionManager.GetGameSessionByPlayerId(peer.Id);
+                GameSession? gameSession = gameSessionHandler.GetGameSessionByPlayerId(peer.Id);
 
                 // If the peer was in a game session, handle their disconnection
                 if (gameSession != null)
@@ -252,7 +270,7 @@ namespace CardTowers_GameServer.Shine.Handlers
 
             if (isValid)
             {
-                Console.WriteLine($"Incoming client JWT is valid - accepted connection for player");
+                logger.LogInformation("Incoming client JWT is valid - accepted connection for player: " + request.RemoteEndPoint.ToString());
                
                 // If the token is valid, get the "sub" claim which is the account id
                 string? accountId = cognitoJwtManager.GetSubjectFromToken(token);

@@ -10,50 +10,43 @@ namespace CardTowers_GameServer.Shine.Handlers
 
     public class GameSessionHandler
     {
-        private Dictionary<string, GameSession> gameSessions;
+        private List<GameSession> gameSessions;
 
         public GameSessionHandler()
         {
-            gameSessions = new Dictionary<string, GameSession>();
+            gameSessions = new List<GameSession>();
         }
 
-        public void AddGameSession(GameSession gameSession)
+
+        public void AddSession(GameSession session)
         {
-            gameSessions.Add(gameSession.Id, gameSession);
-            Console.WriteLine("Added game session to manager: " + gameSession.Id);
+            gameSessions.Add(session);
         }
 
-        public void RemoveGameSession(GameSession gameSession)
+        public void RemoveSession(GameSession session)
         {
-            gameSessions.Remove(gameSession.Id);
-            Console.WriteLine("Removed game session from manager: " + gameSession.Id);
+            gameSessions.Remove(session);
+        }
+
+
+        public void UpdateAllGameSessions()
+        {
+            foreach (var gameSession in gameSessions)
+            {
+                gameSession.Update();
+            }
+        }
+
+
+        public GameSession? GetGameSessionByPlayerId(int id)
+        {
+            return gameSessions.FirstOrDefault(gs => gs.HasPlayer(id));
         }
 
 
         public int Count()
-        { 
-            return gameSessions.Count;
-        }
-
-        public GameSession GetGameSession(string sessionId)
         {
-            gameSessions.TryGetValue(sessionId, out GameSession gameSession);
-            return gameSession;
-        }
-
-
-        public GameSession GetGameSessionByPlayerId(int id)
-        {
-            // Iterate over all game sessions to find the one that contains the player
-            foreach (var gameSession in gameSessions.Values)
-            {
-                if (gameSession.HasPlayer(id))
-                {
-                    return gameSession;
-                }
-            }
-
-            return null;
+            return this.gameSessions.Count;
         }
     }
 }
