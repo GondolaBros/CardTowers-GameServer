@@ -1,10 +1,10 @@
-﻿using System;
+﻿using CardTowers_GameServer.Shine.Models;
+
 namespace CardTowers_GameServer.Shine.State.Deltas
 {
     public class PlayerDelta : Delta
     {
-        public int ElixirChanged { get; set; }
+        public Mana Mana { get; set; }
         // Add other properties as needed.
     }
 }
-

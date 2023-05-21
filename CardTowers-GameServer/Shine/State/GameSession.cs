@@ -5,6 +5,8 @@ using CardTowers_GameServer.Shine.Data;
 using CardTowers_GameServer.Shine.Matchmaking;
 using CardTowers_GameServer.Shine.Models;
 using CardTowers_GameServer.Shine.State;
+using CardTowers_GameServer.Shine.State.Actions;
+using CardTowers_GameServer.Shine.State.Deltas;
 using CardTowers_GameServer.Shine.Util;
 
 namespace CardTowers_GameServer.Shine.State
@@ -17,8 +19,8 @@ namespace CardTowers_GameServer.Shine.State
         public List<Player> PlayerSessions { get; private set; }
         public event Action<GameSession> OnGameSessionStopped;
 
-        //public PlayerState Player1State { get; private set; }
-        //public PlayerState Player2State { get; private set; }
+        public PlayerState Player1State { get; private set; }
+        public PlayerState Player2State { get; private set; }
 
         private long lastTickTime;
         private long accumulatedDeltaTime;
@@ -36,37 +38,37 @@ namespace CardTowers_GameServer.Shine.State
             PlayerSessions.Add(p1);
             PlayerSessions.Add(p2);
 
-            //Player1State = new PlayerState(p1, new GameMap());
-            //Player2State = new PlayerState(p2, new GameMap());
+            Player1State = new PlayerState();
+            Player2State = new PlayerState();
 
             accumulatedDeltaTime = 0;
         }
 
         public void Update()
         {
-            // Calculate delta time
             long currentTickTime = ServerStopwatch.ElapsedMilliseconds;
             long deltaTime = currentTickTime - lastTickTime;
             lastTickTime = currentTickTime;
 
-            // Accumulate delta time
             accumulatedDeltaTime += deltaTime;
 
-            /*
-            // If enough time has passed, increase Elixir
-            if (accumulatedDeltaTime >= Constants.ELIXIR_GENERATION_INTERVAL_MS)
+            // If enough time has passed, update mana
+            if (accumulatedDeltaTime >= Mana.MANA_GENERATION_INTERVAL_MS)
             {
-                var elixirAction = new SpendElixirAction(-Constants.ELIXIR_PER_INTERVAL);
-                Player1State.ApplyDeltaAction(elixirAction);
-                Player2State.ApplyDeltaAction(elixirAction);
+                // Create the delta actions to update mana
+                SpendManaAction spendManaAction1 = new SpendManaAction(Mana.MANA_PER_INTERVAL);
+                SpendManaAction spendManaAction2 = new SpendManaAction(Mana.MANA_PER_INTERVAL);
 
-                accumulatedDeltaTime -= Constants.ELIXIR_GENERATION_INTERVAL_MS;
-            }*/
+                // Apply the delta actions to the player states
+                UpdateGameState(PlayerSessions[0], spendManaAction1);
+                UpdateGameState(PlayerSessions[1], spendManaAction2);
+
+                accumulatedDeltaTime -= Mana.MANA_GENERATION_INTERVAL_MS;
+            }
         }
 
 
-        /*
-        public void UpdateGameState(Player player, IDeltaAction deltaAction)
+        public void UpdateGameState(Player player, IDeltaAction<PlayerDelta> deltaAction)
         {
             // Get the appropriate PlayerState instance based on the player
             PlayerState playerState = player == PlayerSessions[0] ? Player1State : Player2State;
@@ -74,18 +76,21 @@ namespace CardTowers_GameServer.Shine.State
             // Apply delta action to the player state
             try
             {
-                playerState.ApplyDeltaAction(deltaAction);
+                PlayerDelta delta = playerState.GenerateDelta();
+                deltaAction.Execute(playerState, delta);
+                playerState.ApplyDelta(delta);
             }
             catch (Exception e)
             {
-                // Handle the exception (for example, if the player doesn't have enough elixir to play the card)
+                // Handle the exception (for example, if the player doesn't have enough mana to perform the action)
                 Console.WriteLine($"Error applying delta action: {e.Message}");
             }
-        }*/
+        }
+
 
         public long GetElapsedTime()
         {
-            return ServerStopwatch.Elapsed.Ticks;
+            return ServerStopwatch.ElapsedMilliseconds;
         }
 
         public void Cleanup()
@@ -109,7 +114,6 @@ namespace CardTowers_GameServer.Shine.State
         {
             return PlayerSessions.Exists(p => p.Peer.Id == id);
         }
-
 
         public void PlayerDisconnected(Player player)
         {

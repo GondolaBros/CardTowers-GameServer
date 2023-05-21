@@ -12,6 +12,7 @@
     <None Remove="Shine\Data\Entities\" />
     <None Remove="Shine\Data\Repositories\" />
     <None Remove="Shine\State\Deltas\" />
+    <None Remove="Shine\State\Actions\" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Lib\LiteNetLib\LiteNetLib.csproj" />
@@ -31,5 +32,6 @@
     <Folder Include="Shine\Data\Entities\" />
     <Folder Include="Shine\Data\Repositories\" />
     <Folder Include="Shine\State\Deltas\" />
+    <Folder Include="Shine\State\Actions\" />
   </ItemGroup>
 </Project>

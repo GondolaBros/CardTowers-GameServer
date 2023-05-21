@@ -1,13 +1,21 @@
 ﻿using System;
-using CardTowers_GameServer.Shine.State;
+using System.Collections.Generic;
+using CardTowers_GameServer.Shine.Models;
+using CardTowers_GameServer.Shine.State.Actions;
 using CardTowers_GameServer.Shine.State.Deltas;
-using CardTowers_GameServer.Shine.Util;
 
 namespace CardTowers_GameServer.Shine.State
 {
     public class PlayerState : DeltaObjectBase<PlayerDelta>, IGameState<PlayerDelta, IDeltaAction<PlayerDelta>>
     {
-        // Player state properties go here.
+        private Dictionary<Type, IDeltaAction<PlayerDelta>> deltaActions;
+
+        public PlayerState()
+        {
+            deltaActions = new Dictionary<Type, IDeltaAction<PlayerDelta>>();
+            RegisterDeltaAction<SpendManaAction>(new SpendManaAction(1));
+            // Register other delta actions as needed.
+        }
 
         protected override PlayerDelta CreateDelta()
         {
@@ -18,8 +26,18 @@ namespace CardTowers_GameServer.Shine.State
 
         public void ApplyDeltaAction(IDeltaAction<PlayerDelta> deltaAction)
         {
-            // Logic to apply a delta action goes here.
-            deltaAction.Execute(this);
+            Type actionType = deltaAction.GetType();
+            if (deltaActions.TryGetValue(actionType, out IDeltaAction<PlayerDelta> registeredAction))
+            {
+                PlayerDelta delta = GenerateDelta();
+                deltaAction.Execute(this, delta);
+                ApplyDelta(delta);
+            }
+            else
+            {
+                // No delta action registered for this type
+                throw new InvalidOperationException($"No delta action registered for type {actionType.Name}");
+            }
         }
 
         public IGameStateSnapshot<PlayerDelta> CreateSnapshot()
@@ -33,6 +51,15 @@ namespace CardTowers_GameServer.Shine.State
         {
             // Logic to restore state from a snapshot goes here.
             ApplyDelta(snapshot.GetDelta());
+        }
+
+        private void RegisterDeltaAction<TAction>(TAction deltaAction) where TAction : IDeltaAction<PlayerDelta>
+        {
+            Type actionType = typeof(TAction);
+            if (!deltaActions.ContainsKey(actionType))
+            {
+                deltaActions.Add(actionType, deltaAction);
+            }
         }
     }
 }
