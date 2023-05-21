@@ -4,10 +4,25 @@ namespace CardTowers_GameServer.Shine.Models
 {
     public class GameTile
     {
+        private TileType type;
+        private TileStatus status;
 
-        public TileType Type { get; set; }
+        public TileType Type
+        {
+            get { return type; }
+            set { type = value; }
+        }
 
-        // we can add any other properties or methods
-        // specific to the server-side logic here.
+        public TileStatus Status
+        {
+            get { return status; }
+            set { status = value; }
+        }
+
+        public void ReloadTile()
+        {
+            // reload tile on server, so i guess just send update to client
+            // to tell their client to reload
+        }
     }
 }

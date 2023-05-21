@@ -44,28 +44,22 @@ namespace CardTowers_GameServer.Shine.State
             accumulatedDeltaTime = 0;
         }
 
+
+
         public void Update()
         {
             long currentTickTime = ServerStopwatch.ElapsedMilliseconds;
-            long deltaTime = currentTickTime - lastTickTime;
+
+            // Generate and apply mana update delta for each player state
+            GenerateManaAction generateManaAction1 = new GenerateManaAction(Player1State.Mana);
+            Player1State.ApplyDeltaAction(generateManaAction1);
+
+            GenerateManaAction generateManaAction2 = new GenerateManaAction(Player2State.Mana);
+            Player2State.ApplyDeltaAction(generateManaAction2);
+
             lastTickTime = currentTickTime;
-
-            accumulatedDeltaTime += deltaTime;
-
-            // If enough time has passed, update mana
-            if (accumulatedDeltaTime >= Mana.MANA_GENERATION_INTERVAL_MS)
-            {
-                // Create the delta actions to update mana
-                SpendManaAction spendManaAction1 = new SpendManaAction(Mana.MANA_PER_INTERVAL);
-                SpendManaAction spendManaAction2 = new SpendManaAction(Mana.MANA_PER_INTERVAL);
-
-                // Apply the delta actions to the player states
-                UpdateGameState(PlayerSessions[0], spendManaAction1);
-                UpdateGameState(PlayerSessions[1], spendManaAction2);
-
-                accumulatedDeltaTime -= Mana.MANA_GENERATION_INTERVAL_MS;
-            }
         }
+
 
 
         public void UpdateGameState(Player player, IDeltaAction<PlayerDelta> deltaAction)
@@ -86,7 +80,6 @@ namespace CardTowers_GameServer.Shine.State
                 Console.WriteLine($"Error applying delta action: {e.Message}");
             }
         }
-
 
         public long GetElapsedTime()
         {

@@ -15,6 +15,8 @@ namespace CardTowers_GameServer.Shine.Models
 
         private int buildingCount;
 
+        public string MapName { get; private set; }
+
         public GameMap()
         {
             Tiles = new GameTile[NUM_ROWS * NUM_COLS];
@@ -27,6 +29,25 @@ namespace CardTowers_GameServer.Shine.Models
             Buildings = new Building[Constants.MAX_AMOUNT_BUILDINGS];
 
             buildingCount = 0;
+        }
+
+
+        // eventally this will load from db
+        public void LoadFromMapString(string mapString)
+        {
+            string[] tokens = mapString.Split('|');
+
+            int[] tileTypes = System.Array.ConvertAll(tokens[1].Split(','), int.Parse);
+            int[] tileStatus = System.Array.ConvertAll(tokens[2].Split(','), int.Parse);
+
+            for (int i = 0; i < tileTypes.Length; i++)
+            {
+                Tiles[i].Type = (TileType)tileTypes[i];
+                Tiles[i].Status = (TileStatus)tileStatus[i];
+                Tiles[i].ReloadTile();
+            }
+
+            this.MapName = tokens[0];
         }
 
 

@@ -5,8 +5,7 @@ namespace CardTowers_GameServer.Shine.State
 {
     public abstract class DeltaObjectBase<TDelta> : IDeltaObject<TDelta> where TDelta : Delta
     {
-        private readonly Dictionary<Type, IDeltaAction<TDelta>> deltaActions;
-
+        protected readonly Dictionary<Type, IDeltaAction<TDelta>> deltaActions;
         protected TDelta currentDelta;
 
         protected DeltaObjectBase()
@@ -34,7 +33,7 @@ namespace CardTowers_GameServer.Shine.State
             // Additional logic to be implemented by derived classes
         }
 
-        protected void RegisterDeltaAction<TAction>(IDeltaAction<TDelta> deltaAction) where TAction : IDeltaAction<TDelta>
+        protected virtual void RegisterDeltaAction<TAction>(IDeltaAction<TDelta> deltaAction) where TAction : IDeltaAction<TDelta>
         {
             Type actionType = typeof(TAction);
             if (!deltaActions.ContainsKey(actionType))
@@ -42,6 +41,7 @@ namespace CardTowers_GameServer.Shine.State
                 deltaActions.Add(actionType, deltaAction);
             }
         }
+
 
         public void ApplyDeltaAction<TAction>(TAction deltaAction) where TAction : IDeltaAction<TDelta>
         {
@@ -58,6 +58,6 @@ namespace CardTowers_GameServer.Shine.State
                 throw new InvalidOperationException($"No delta action registered for type {actionType.Name}");
             }
         }
-
     }
 }
+
