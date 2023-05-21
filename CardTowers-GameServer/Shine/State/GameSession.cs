@@ -1,7 +1,10 @@
-﻿using System.Diagnostics;
+﻿using System;
+using System.Collections.Generic;
+using System.Diagnostics;
 using CardTowers_GameServer.Shine.Data;
 using CardTowers_GameServer.Shine.Matchmaking;
 using CardTowers_GameServer.Shine.Models;
+using CardTowers_GameServer.Shine.State;
 using CardTowers_GameServer.Shine.Util;
 
 namespace CardTowers_GameServer.Shine.State
@@ -14,8 +17,8 @@ namespace CardTowers_GameServer.Shine.State
         public List<Player> PlayerSessions { get; private set; }
         public event Action<GameSession> OnGameSessionStopped;
 
-        public PlayerState Player1State { get; private set; }
-        public PlayerState Player2State { get; private set; }
+        //public PlayerState Player1State { get; private set; }
+        //public PlayerState Player2State { get; private set; }
 
         private long lastTickTime;
         private long accumulatedDeltaTime;
@@ -33,13 +36,11 @@ namespace CardTowers_GameServer.Shine.State
             PlayerSessions.Add(p1);
             PlayerSessions.Add(p2);
 
-            Player1State = new PlayerState(p1, new GameMap());
-            Player2State = new PlayerState(p2, new GameMap());
+            //Player1State = new PlayerState(p1, new GameMap());
+            //Player2State = new PlayerState(p2, new GameMap());
 
             accumulatedDeltaTime = 0;
         }
-
-
 
         public void Update()
         {
@@ -51,46 +52,46 @@ namespace CardTowers_GameServer.Shine.State
             // Accumulate delta time
             accumulatedDeltaTime += deltaTime;
 
+            /*
             // If enough time has passed, increase Elixir
             if (accumulatedDeltaTime >= Constants.ELIXIR_GENERATION_INTERVAL_MS)
             {
-                Player1State.AddElixir(Constants.ELIXIR_PER_INTERVAL);
-                Player2State.AddElixir(Constants.ELIXIR_PER_INTERVAL);
+                var elixirAction = new SpendElixirAction(-Constants.ELIXIR_PER_INTERVAL);
+                Player1State.ApplyDeltaAction(elixirAction);
+                Player2State.ApplyDeltaAction(elixirAction);
 
                 accumulatedDeltaTime -= Constants.ELIXIR_GENERATION_INTERVAL_MS;
-            }
+            }*/
         }
 
 
-        public void UpdateGameState(Player player, DeltaState deltaState)
+        /*
+        public void UpdateGameState(Player player, IDeltaAction deltaAction)
         {
             // Get the appropriate PlayerState instance based on the player
             PlayerState playerState = player == PlayerSessions[0] ? Player1State : Player2State;
 
-            // Apply delta state to the player state
+            // Apply delta action to the player state
             try
             {
-                deltaState.Apply(playerState);
+                playerState.ApplyDeltaAction(deltaAction);
             }
             catch (Exception e)
             {
                 // Handle the exception (for example, if the player doesn't have enough elixir to play the card)
-                Console.WriteLine($"Error applying delta state: {e.Message}");
+                Console.WriteLine($"Error applying delta action: {e.Message}");
             }
-        }
-
+        }*/
 
         public long GetElapsedTime()
         {
             return ServerStopwatch.Elapsed.Ticks;
         }
 
-
         public void Cleanup()
         {
             PlayerSessions.Clear();
         }
-
 
         public void Stop(Player winner)
         {
@@ -101,9 +102,8 @@ namespace CardTowers_GameServer.Shine.State
             Console.WriteLine(winner.Entity.display_name + " is the winner!");
             Console.WriteLine("Cleaning up game session, send final state to clients.");
 
-            OnGameSessionStopped(this);
+            OnGameSessionStopped?.Invoke(this);
         }
-
 
         public bool HasPlayer(int id)
         {
@@ -128,4 +128,3 @@ namespace CardTowers_GameServer.Shine.State
         }
     }
 }
-

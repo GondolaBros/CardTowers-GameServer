@@ -1,8 +1,11 @@
 ﻿<Properties StartupConfiguration="{FA529165-DDC7-483F-A005-4D78D44DC645}|Default">
+  <MonoDevelop.Ide.ItemProperties.CardTowers-GameServer PreferredExecutionTarget="MonoDevelop.Default" />
   <MonoDevelop.Ide.Workbench ActiveDocument="CardTowers-GameServer/Shine/Handlers/ServerHandler.cs">
     <Files>
-      <File FileName="CardTowers-GameServer/Shine/Handlers/ServerHandler.cs" Line="135" Column="14" />
-      <File FileName="CardTowers-GameServer/Shine/Messages/GameCreatedMessage.cs" Line="14" Column="41" />
+      <File FileName="CardTowers-GameServer/Shine/State/GameSession.cs" />
+      <File FileName="CardTowers-GameServer/Shine/Handlers/ServerHandler.cs" Line="170" Column="93" />
+      <File FileName="CardTowers-GameServer/Shine/Handlers/GameSessionHandler.cs" />
+      <File FileName="CardTowers-GameServer/Shine/GameServer.cs" />
     </Files>
     <Pads>
       <Pad Id="ProjectPad">
@@ -20,7 +23,9 @@
                 <Node name="Matchmaking" expanded="True" />
                 <Node name="Messages" expanded="True" />
                 <Node name="Models" expanded="True" />
-                <Node name="State" expanded="True" />
+                <Node name="State" expanded="True">
+                  <Node name="Deltas" expanded="True" />
+                </Node>
                 <Node name="Util" expanded="True" />
               </Node>
             </Node>
@@ -29,11 +34,10 @@
       </Pad>
     </Pads>
   </MonoDevelop.Ide.Workbench>
+  <MonoDevelop.Ide.DebuggingService.PinnedWatches />
   <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug" />
-  <MonoDevelop.Ide.ItemProperties.CardTowers-GameServer PreferredExecutionTarget="MonoDevelop.Default" />
+  <MultiItemStartupConfigurations />
   <MonoDevelop.Ide.DebuggingService.Breakpoints>
     <BreakpointStore />
   </MonoDevelop.Ide.DebuggingService.Breakpoints>
-  <MultiItemStartupConfigurations />
-  <MonoDevelop.Ide.DebuggingService.PinnedWatches />
 </Properties>
