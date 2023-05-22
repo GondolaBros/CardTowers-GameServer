@@ -7,10 +7,12 @@ namespace CardTowers_GameServer.Shine.State
     public class PlayerState : DeltaObjectBase<PlayerDelta>, IGameState<PlayerDelta, IDeltaAction<PlayerDelta>>
     {
         public Mana Mana { get; private set; }
+        public GameMap Map { get; private set; }
 
         public PlayerState()
         {
             Mana = new Mana();
+            Map = new GameMap();
             RegisterDeltaAction<GenerateManaAction>(new GenerateManaAction(Mana));
             // Register other delta actions as needed.
         }
@@ -18,22 +20,34 @@ namespace CardTowers_GameServer.Shine.State
 
         protected override PlayerDelta CreateDelta()
         {
-            // Logic to create a delta from the current and previous state goes here.
-            // For now, return an empty PlayerDelta.
-            return new PlayerDelta();
+            // Create a delta from the current state
+            PlayerDelta delta = new PlayerDelta();
+
+            // Update the delta to reflect the current mana
+            delta.GeneratedMana = Mana.GetCurrentMana();
+
+            return delta;
         }
+
+
 
         public IGameStateSnapshot<PlayerDelta> CreateSnapshot()
         {
-            // Logic to create a snapshot goes here.
-            // For now, return a snapshot that contains the current delta.
-            return new PlayerStateSnapshot { PlayerDelta = currentDelta };
+            // Return a snapshot that contains the current delta and the current mana.
+            return new PlayerStateSnapshot { PlayerDelta = currentDelta, Mana = Mana.GetCurrentMana() };
         }
+
 
         public void RestoreFromSnapshot(IGameStateSnapshot<PlayerDelta> snapshot)
         {
-            // Logic to restore state from a snapshot goes here.
-            ApplyDelta(snapshot.GetDelta());
+            // Get the state stored in the snapshot.
+            PlayerStateSnapshot playerStateSnapshot = (PlayerStateSnapshot)snapshot;
+
+            // Apply the stored delta to this state.
+            ApplyDelta(playerStateSnapshot.GetDelta());
+
+            // Restore the mana to the value stored in the snapshot.
+            Mana.SetCurrentMana(playerStateSnapshot.Mana);
         }
     }
 }

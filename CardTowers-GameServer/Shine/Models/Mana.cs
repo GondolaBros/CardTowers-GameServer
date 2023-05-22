@@ -18,6 +18,13 @@ namespace CardTowers_GameServer.Shine.Models
             lastGenerationTime = DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond;
         }
 
+
+        public void SetCurrentMana(int mana)
+        {
+            currentMana = mana;
+        }
+
+
         public int GetCurrentMana()
         {
             return currentMana;

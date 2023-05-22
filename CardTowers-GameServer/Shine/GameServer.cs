@@ -23,7 +23,7 @@ namespace CardTowers_GameServer.Shine
             while (serverHandler.IsRunning)
             {
                 serverHandler.Poll();
-                //serverHandler.Update();
+                serverHandler.Update();
 
                 await Task.Delay(15);
             }

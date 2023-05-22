@@ -13,6 +13,7 @@ namespace CardTowers_GameServer.Shine.State.Actions
             this.mana = mana;
         }
 
+
         public void Execute(IDeltaObject<PlayerDelta> deltaObject, PlayerDelta delta)
         {
             long currentTickTime = DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond;
