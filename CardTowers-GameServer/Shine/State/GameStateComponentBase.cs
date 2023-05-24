@@ -78,6 +78,20 @@ public abstract class GameStateComponentBase<TDelta> : IGameStateComponent<TDelt
     }
 
 
+    public virtual bool IsStateConsistent()
+    {
+        // Dummy return. Implement game-specific logic here.
+        return true;
+    }
+
+    // Generates a snapshot of the current state
+    public virtual GameStateSnapshot<IDelta> GenerateSnapshot()
+    {
+        // This simply wraps the current state (the result of GenerateDelta) in a GameStateSnapshot
+        return new GameStateSnapshot<IDelta>(GenerateDelta());
+    }
+
+
     public bool ShouldGenerateDelta(long currentTimestamp)
     {
         // Check if enough time has passed since the last delta generation

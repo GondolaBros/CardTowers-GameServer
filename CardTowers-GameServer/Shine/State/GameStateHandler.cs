@@ -9,6 +9,9 @@ namespace CardTowers_GameServer.Shine.State
     {
         private readonly Dictionary<DeltaType, IDeltaComponent> stateComponents = new();
 
+        private SnapshotHandler snapshotManager = new();
+
+
         private NetPacketProcessor netPacketProcessor;
 
         public GameStateHandler(NetPacketProcessor netPacketProcessor)
@@ -16,6 +19,7 @@ namespace CardTowers_GameServer.Shine.State
             this.netPacketProcessor = netPacketProcessor;
         }
 
+       
         public void AddStateComponent<TDelta>(GameStateComponentBase<TDelta> stateComponent) where TDelta : IDelta, new()
         {
             DeltaType deltaType = stateComponent.GenerateDelta().Type;
@@ -33,20 +37,25 @@ namespace CardTowers_GameServer.Shine.State
 
             foreach (var pair in stateComponents)
             {
-                IDelta delta = pair.Value.GenerateDelta();
-                if (delta != null)
+                if (pair.Value.Frequency != Frequency.EventBased)
                 {
-                    // Write the delta type to the packet
-                    writer.Put((int)delta.Type);
+                    IDelta delta = pair.Value.GenerateDelta();
+                    if (delta != null)
+                    {
+                        // Write the delta type to the packet
+                        writer.Put((int)delta.Type);
 
-                    // Serialize the delta
-                    delta.Serialize(writer);
+                        // Serialize the delta
+                        delta.Serialize(writer);
+                    }
                 }
             }
 
             // Send the packet containing all deltas to the client
             clientPeer.Send(writer, DeliveryMethod.ReliableOrdered);
         }
+
+
 
         public void ReceiveAndApplyDelta(NetPacketReader packet, NetPeer sender)
         {
@@ -95,6 +104,45 @@ namespace CardTowers_GameServer.Shine.State
                 }
             }
             return deltas;
+        }
+
+
+        public void CheckComponentConsistency(DeltaType type)
+        {
+            if (stateComponents.TryGetValue(type, out var component))
+            {
+                if (!component.IsStateConsistent())
+                {
+                    ApplySnapshot(type);
+                }
+            }
+        }
+
+
+        public void GenerateAndStoreAllSnapshots()
+        {
+            var newSnapshots = new Dictionary<DeltaType, GameStateSnapshot<IDelta>>();
+            foreach (var pair in stateComponents)
+            {
+                var snapshot = pair.Value.GenerateSnapshot();
+                newSnapshots[pair.Key] = snapshot;
+            }
+            snapshotManager.StoreSnapshot(newSnapshots);
+        }
+
+
+        public void ApplySnapshot(DeltaType type)
+        {
+            GameStateSnapshot<IDelta> snapshot = snapshotManager.GetLatestSnapshot(type);
+
+            if (stateComponents.TryGetValue(type, out var component))
+            {
+                component.ApplyDelta(snapshot.State);
+            }
+            else
+            {
+                throw new InvalidOperationException("Delta type " + type.ToString() + " has not been registered.");
+            }
         }
     }
 }
