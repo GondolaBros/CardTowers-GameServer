@@ -24,6 +24,7 @@ namespace CardTowers_GameServer.Shine.Handlers
         private CognitoJwtManager cognitoJwtManager;
         private PlayerRepository playerRepository;
 
+
         private Dictionary<NetPeer, Player> connectedPlayers = new Dictionary<NetPeer, Player>();
 
         private volatile bool _isRunning;
@@ -155,10 +156,12 @@ namespace CardTowers_GameServer.Shine.Handlers
             if (connectedPlayers.TryGetValue(GetPeerById(e.P1.Parameters.Id), out p1)
                 && connectedPlayers.TryGetValue(GetPeerById(e.P2.Parameters.Id), out p2))
             {
-                // load dem into da bring
                 try
                 {
-                    GameSession newGameSession = new GameSession(p1, p2);
+                    GameSession newGameSession = new GameSession();
+                    newGameSession.AddPlayer(p1);
+                    newGameSession.AddPlayer(p2);
+
                     newGameSession.OnGameSessionStopped += OnGameSessionStopped;
 
                     gameSessionHandler.AddSession(newGameSession);
@@ -184,7 +187,7 @@ namespace CardTowers_GameServer.Shine.Handlers
             gameEnded.ElapsedTicks = gameSession.GetElapsedTime();
             gameEnded.WinnerId = gameSession.WinnerId;
 
-            foreach (Player p in gameSession.PlayerSessions)
+            foreach (Player p in gameSession.PlayerStates.Keys)
             {
                 this.SendMessage(gameEnded, p.Peer, false);
             }
@@ -232,7 +235,7 @@ namespace CardTowers_GameServer.Shine.Handlers
                 // If the peer was in a game session, handle their disconnection
                 if (gameSession != null)
                 {
-                    Player? p = gameSession.PlayerSessions.Find(p => p.Peer.Id == peer.Id);
+                    Player? p = gameSession.PlayerStates.Keys.FirstOrDefault(p => p.Peer.Id == peer.Id);
 
                     if (p != null)
                     {

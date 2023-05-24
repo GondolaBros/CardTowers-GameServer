@@ -17,6 +17,9 @@ namespace CardTowers_GameServer.Shine.Models
 
         public string MapName { get; private set; }
 
+        string mapString = "MultiplayerStandard|0,0,0,0,0,0,0,1,1,1,1,0,0,1,1,1,1,0,0,1,1,1,1,0,0,0,0,0,0,0|0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0|5/19/2023 10:10:15 PM|";
+
+
         public GameMap()
         {
             Tiles = new GameTile[NUM_ROWS * NUM_COLS];
@@ -29,6 +32,8 @@ namespace CardTowers_GameServer.Shine.Models
             Buildings = new Building[Constants.MAX_AMOUNT_BUILDINGS];
 
             buildingCount = 0;
+
+            LoadFromMapString(mapString);
         }
 
 

@@ -5,8 +5,6 @@ using CardTowers_GameServer.Shine.Data;
 using CardTowers_GameServer.Shine.Matchmaking;
 using CardTowers_GameServer.Shine.Models;
 using CardTowers_GameServer.Shine.State;
-using CardTowers_GameServer.Shine.State.Actions;
-using CardTowers_GameServer.Shine.State.Deltas;
 using CardTowers_GameServer.Shine.Util;
 
 namespace CardTowers_GameServer.Shine.State
@@ -16,68 +14,57 @@ namespace CardTowers_GameServer.Shine.State
         public string Id { get; private set; }
 
         public Stopwatch ServerStopwatch { get; private set; }
-        public List<Player> PlayerSessions { get; private set; }
+        //public Dictionary<Player, PlayerState> PlayerStates { get; private set; }
+        public Dictionary<Player, PlayerState> PlayerStates { get; private set; }
         public event Action<GameSession> OnGameSessionStopped;
-
-        public PlayerState Player1State { get; private set; }
-        public PlayerState Player2State { get; private set; }
 
         private long lastTickTime;
         private long accumulatedDeltaTime;
 
         public int WinnerId { get; private set; }
 
-        public GameSession(Player p1, Player p2)
+        bool started = false;
+
+        public GameSession()
+        {
+            Id = Guid.NewGuid().ToString();
+            PlayerStates = new Dictionary<Player, PlayerState>();
+        }
+
+
+        public void Start()
         {
             ServerStopwatch = Stopwatch.StartNew();
             lastTickTime = ServerStopwatch.ElapsedMilliseconds;
-
-            Id = Guid.NewGuid().ToString();
-
-            PlayerSessions = new List<Player>(Constants.MAX_PLAYERS_STANDARD_MULTIPLAYER);
-            PlayerSessions.Add(p1);
-            PlayerSessions.Add(p2);
-
-            Player1State = new PlayerState();
-            Player2State = new PlayerState();
-
             accumulatedDeltaTime = 0;
+            started = true;
         }
 
+        public void AddPlayer(Player player)
+        {
+            var playerState = new PlayerState();
+            PlayerStates.Add(player, playerState);
+        }
+
+        public void RemovePlayer(Player player)
+        {
+            PlayerStates.Remove(player);
+        }
 
 
         public void Update()
         {
-            long currentTickTime = ServerStopwatch.ElapsedMilliseconds;
-
-            // Generate and apply mana update delta for each player state
-            GenerateManaAction generateManaAction1 = new GenerateManaAction(Player1State.Mana);
-            Player1State.ApplyDeltaAction(generateManaAction1);
-
-            GenerateManaAction generateManaAction2 = new GenerateManaAction(Player2State.Mana);
-            Player2State.ApplyDeltaAction(generateManaAction2);
-
-            lastTickTime = currentTickTime;
-        }
-
-
-
-        public void UpdateGameState(Player player, IDeltaAction<PlayerDelta> deltaAction)
-        {
-            // Get the appropriate PlayerState instance based on the player
-            PlayerState playerState = player == PlayerSessions[0] ? Player1State : Player2State;
-
-            // Apply delta action to the player state
-            try
+            if (started)
             {
-                PlayerDelta delta = playerState.GenerateDelta();
-                deltaAction.Execute(playerState, delta);
-                playerState.ApplyDelta(delta);
-            }
-            catch (Exception e)
-            {
-                // Handle the exception (for example, if the player doesn't have enough mana to perform the action)
-                Console.WriteLine($"Error applying delta action: {e.Message}");
+                long currentTickTime = ServerStopwatch.ElapsedMilliseconds;
+                long deltaTime = currentTickTime - lastTickTime;
+
+                foreach (var playerState in PlayerStates.Values)
+                {
+                    playerState.Update(deltaTime);
+                }
+
+                lastTickTime = currentTickTime;
             }
         }
 
@@ -88,7 +75,7 @@ namespace CardTowers_GameServer.Shine.State
 
         public void Cleanup()
         {
-            PlayerSessions.Clear();
+            PlayerStates.Clear();
         }
 
         public void Stop(Player winner)
@@ -103,10 +90,18 @@ namespace CardTowers_GameServer.Shine.State
             OnGameSessionStopped?.Invoke(this);
         }
 
+
         public bool HasPlayer(int id)
         {
-            return PlayerSessions.Exists(p => p.Peer.Id == id);
+            foreach (var player in PlayerStates.Keys)
+            {
+                if (player.Peer.Id == id)
+                    return true;
+            }
+
+            return false;
         }
+
 
         public void PlayerDisconnected(Player player)
         {
@@ -114,13 +109,13 @@ namespace CardTowers_GameServer.Shine.State
 
             // Handle player disconnection, possibly end the game and declare the other player as the winner.
             // Remove the player from the session
-            PlayerSessions.Remove(player);
+            PlayerStates.Remove(player);
 
             // If there's only one player left, they are the winner
-            if (PlayerSessions.Count == 1)
+            if (PlayerStates.Count == 1)
             {
-                Console.WriteLine("GameSession player count: " + PlayerSessions.Count);
-                Stop(PlayerSessions[0]);
+                Console.WriteLine("GameSession player count: " + PlayerStates.Count);
+                Stop(PlayerStates.Keys.GetEnumerator().Current);
             }
         }
     }

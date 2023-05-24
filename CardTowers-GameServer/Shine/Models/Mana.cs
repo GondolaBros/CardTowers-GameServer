@@ -12,12 +12,12 @@ namespace CardTowers_GameServer.Shine.Models
         private int currentMana;
         private long lastGenerationTime;
 
+
         public Mana()
         {
             currentMana = INITIAL_MANA;
             lastGenerationTime = DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond;
         }
-
 
         public void SetCurrentMana(int mana)
         {
@@ -30,14 +30,14 @@ namespace CardTowers_GameServer.Shine.Models
             return currentMana;
         }
 
-        public void UpdateMana(long currentTickTime)
+        public void Update(long currentTickTime)
         {
             long deltaTime = currentTickTime - lastGenerationTime;
             int manaGenerated = (int)(deltaTime / MANA_GENERATION_INTERVAL_MS) * MANA_PER_INTERVAL;
 
             if (manaGenerated > 0)
             {
-                currentMana = Math.Min(currentMana + manaGenerated, MAX_MANA);
+                SetCurrentMana(Math.Min(currentMana + manaGenerated, MAX_MANA)); // Use the new setter method
                 lastGenerationTime += manaGenerated * MANA_GENERATION_INTERVAL_MS;
             }
         }
@@ -51,7 +51,7 @@ namespace CardTowers_GameServer.Shine.Models
         {
             if (CanSpendMana(amount))
             {
-                currentMana -= amount;
+                SetCurrentMana(currentMana - amount); // Use the new setter method
                 return true;
             }
             return false;
