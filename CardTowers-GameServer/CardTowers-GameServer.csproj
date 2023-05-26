@@ -11,6 +11,9 @@
   <ItemGroup>
     <None Remove="Shine\Data\Entities\" />
     <None Remove="Shine\Data\Repositories\" />
+    <None Remove="Shine\State\Components\" />
+    <None Remove="Shine\State\Deltas\" />
+    <None Remove="Shine\Messages\Interfaces\" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Lib\LiteNetLib\LiteNetLib.csproj" />
@@ -29,5 +32,8 @@
   <ItemGroup>
     <Folder Include="Shine\Data\Entities\" />
     <Folder Include="Shine\Data\Repositories\" />
+    <Folder Include="Shine\State\Components\" />
+    <Folder Include="Shine\State\Deltas\" />
+    <Folder Include="Shine\Messages\Interfaces\" />
   </ItemGroup>
 </Project>

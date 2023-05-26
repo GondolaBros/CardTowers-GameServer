@@ -1,15 +1,16 @@
-﻿using LiteNetLib;
-using LiteNetLib.Utils;
-using CardTowers_GameServer.Shine.Matchmaking;
+﻿using CardTowers_GameServer.Shine.Matchmaking;
 using CardTowers_GameServer.Shine.State;
 using CardTowers_GameServer.Shine.Util;
 using CardTowers_GameServer.Shine.Models;
 using CardTowers_GameServer.Shine.Data.Repositories;
-using Microsoft.Extensions.Logging;
-using System.Numerics;
 using CardTowers_GameServer.Shine.Data.Entities;
-using System.Collections.Concurrent;
 using CardTowers_GameServer.Shine.Messages;
+using CardTowers_GameServer.Shine.Messages.Interfaces;
+
+using LiteNetLib;
+using LiteNetLib.Utils;
+
+using Microsoft.Extensions.Logging;
 
 namespace CardTowers_GameServer.Shine.Handlers
 {
@@ -23,7 +24,7 @@ namespace CardTowers_GameServer.Shine.Handlers
         private GameSessionHandler gameSessionHandler;
         private CognitoJwtManager cognitoJwtManager;
         private PlayerRepository playerRepository;
-
+        private EventDispatcher eventDispatcher;
 
         private Dictionary<NetPeer, Player> connectedPlayers = new Dictionary<NetPeer, Player>();
 
@@ -36,9 +37,9 @@ namespace CardTowers_GameServer.Shine.Handlers
         {
             var loggerFactory = LoggerFactory.Create(builder => { builder.AddConsole(); });
 
-            // Get an ILogger from the LoggerFactory
             logger = loggerFactory.CreateLogger<ServerHandler>();
 
+            eventDispatcher = new EventDispatcher();
             PacketProcessor = new NetPacketProcessor();
             LiteNetListener = new EventBasedNetListener();
             LiteNetManager = new NetManager(LiteNetListener);
@@ -55,12 +56,16 @@ namespace CardTowers_GameServer.Shine.Handlers
             matchmakingHandler.OnMatchFound += OnMatchFound;
             NetEvents.OnMatchmakingEntryReceived += NetEvents_OnMatchmakingEntryReceived;
 
-            RegisterAndSubscribe<MatchmakingMessage>();
-            RegisterAndSubscribe<GameCreatedMessage>();
-            RegisterAndSubscribe<GameEndedMessagae>();
-        }
-        
+            RegisterAndSubscribe<MatchmakingMessage>(MessageChannel.System);
+            RegisterAndSubscribe<GameCreatedMessage>(MessageChannel.System);
+            RegisterAndSubscribe<GameEndedMessagae>(MessageChannel.System);
 
+            // Register system and game message handlers
+            eventDispatcher.RegisterHandler<ISystemMessage>(OnSystemMessageReceived, (byte)MessageChannel.System);
+            eventDispatcher.RegisterHandler<IGameMessage>(OnGameMessageReceived, (byte)MessageChannel.Game);
+        }
+
+     
         public void Start(int port)
         {
             LiteNetManager.Start(port);
@@ -76,6 +81,13 @@ namespace CardTowers_GameServer.Shine.Handlers
         }
 
 
+        public bool IsRunning
+        {
+            get { return _isRunning; }
+            set { _isRunning = value; }
+        }
+
+
         public void Poll()
         {
             LiteNetManager.PollEvents();
@@ -85,21 +97,6 @@ namespace CardTowers_GameServer.Shine.Handlers
         public void Update()
         {
             this.gameSessionHandler.UpdateAllGameSessions();
-        }
-
-
-        private void RegisterAndSubscribe<T>() where T : class, IHandledMessage, new()
-        {
-            PacketProcessor.SubscribeReusable<T, NetPeer>(OnMessageReceived);
-            PacketProcessor.RegisterNestedType<T>(() => new T());
-        }
-
-
-        public void SendMessage<T>(T message, NetPeer peer, bool sendUnreliable) where T : class, IHandledMessage, new()
-        {
-            NetDataWriter writer = new NetDataWriter();
-            PacketProcessor.Write(writer, message);
-            peer.Send(writer, sendUnreliable ? DeliveryMethod.Unreliable : DeliveryMethod.ReliableOrdered);
         }
 
 
@@ -117,6 +114,91 @@ namespace CardTowers_GameServer.Shine.Handlers
             {
                 p.Disconnect();
             }
+        }
+
+
+        public void SendMessage<T>(T message, NetPeer peer, bool sendUnreliable) where T : class, INetworkMessage, new()
+        {
+            NetDataWriter writer = new NetDataWriter();
+            PacketProcessor.Write(writer, message);
+            peer.Send(writer, sendUnreliable ? DeliveryMethod.Unreliable : DeliveryMethod.ReliableOrdered);
+        }
+
+
+        private void RegisterAndSubscribe<T>(MessageChannel channel) where T : class, INetworkMessage, new()
+        {
+            byte byteChannel = (byte)channel;
+            PacketProcessor.SubscribeReusable<T, NetPeer>((message, peer) => OnMessageReceived(message, peer, byteChannel));
+            PacketProcessor.RegisterNestedType<T>(() => new T());
+        }
+
+
+        private void LiteNetListener_NetworkReceiveEvent(NetPeer peer, NetPacketReader reader, byte channel, DeliveryMethod deliveryMethod)
+        {
+            PacketProcessor.ReadAllPackets(reader, peer);
+        }
+
+
+        private void OnMessageReceived<T>(T message, NetPeer peer, byte channel) where T : INetworkMessage
+        {
+            eventDispatcher.DispatchMessage(message, peer, channel);
+        }
+
+
+        private void OnGameMessageReceived(IGameMessage gameMessage, NetPeer peer)
+        {
+            gameSessionHandler.RouteGameMessage(gameMessage, peer);
+            logger.LogInformation("OnGameMessageReceived: " + gameMessage.GameSessionId);
+        }
+
+        private void OnSystemMessageReceived(ISystemMessage systemMessage, NetPeer peer)
+        {
+            systemMessage.Handle(peer);
+            logger.LogInformation("OnSystemMessageReceived");
+        }
+
+
+        private void LiteNetListener_ConnectionRequestEvent(ConnectionRequest request)
+        {
+            OnConnectionRequestAsync(request);
+        }
+
+
+        private async void OnConnectionRequestAsync(ConnectionRequest request)
+        {
+            // The client sends the jwt as a string from client connection request
+            string token = request.Data.GetString();
+
+            // Validate the token
+            bool isValid = await cognitoJwtManager.ValidateTokenAsync(token);
+
+            if (isValid)
+            {
+                logger.LogInformation("Incoming client JWT is valid - accepted connection for player: " + request.RemoteEndPoint.ToString());
+
+                // If the token is valid, get the "sub" claim which is the account id
+                string? accountId = cognitoJwtManager.GetSubjectFromToken(token);
+
+                if (accountId != null)
+                {
+                    string? username = cognitoJwtManager.GetUsernameFromToken(token);
+
+                    if (username != null)
+                    {
+                        PlayerEntity? playerEntity = await playerRepository.LoadOrCreatePlayerAccount(accountId, username);
+
+                        if (playerEntity != null)
+                        {
+                            NetPeer peer = request.Accept();
+                            Player player = new Player(peer, playerEntity);
+                            connectedPlayers.Add(peer, player);
+                            return;
+                        }
+                    }
+                }
+            }
+            // reject on any case, no exceptions - this is critical!
+            request.Reject();
         }
 
 
@@ -139,9 +221,14 @@ namespace CardTowers_GameServer.Shine.Handlers
             else
             {
                 // handle error...
-
-
             }
+        }
+
+
+
+        private void LiteNetListener_PeerConnectedEvent(NetPeer peer)
+        {
+            // TODO: what now in peerconnectedevent
         }
 
 
@@ -200,27 +287,9 @@ namespace CardTowers_GameServer.Shine.Handlers
             logger.LogInformation("OnGameSessionStopped: " + gameSession.Id + " | Elapsed seconds: " + totalSeconds);
 
             gameSessionHandler.RemoveSession(gameSession);
-            logger.LogInformation("Total game sessions running: " + gameSessionHandler.Count());
+            logger.LogInformation("Total game sessions running: " + gameSessionHandler.GetSessionCount());
         }
 
-
-        private void OnMessageReceived<T>(T message, NetPeer peer) where T : IHandledMessage
-        {
-            message.Handle(peer);
-        }
-
-
-        private void LiteNetListener_NetworkReceiveEvent(NetPeer peer, NetPacketReader reader, byte channel, DeliveryMethod deliveryMethod)
-        {
-            PacketProcessor.ReadAllPackets(reader, peer);
-        }
-
-
-        private void LiteNetListener_PeerConnectedEvent(NetPeer peer)
-        {
-            // TODO: what now in peerconnectedevent
-
-        }
 
 
         private void LiteNetListener_PeerDisconnectedEvent(NetPeer peer, DisconnectInfo disconnectInfo)
@@ -257,57 +326,6 @@ namespace CardTowers_GameServer.Shine.Handlers
 
                 connectedPlayers.Remove(peer);
             }
-        }
-
-
-        private async void OnConnectionRequestAsync(ConnectionRequest request)
-        {
-            // The client sends the jwt as a string from client connection request
-            string token = request.Data.GetString();
-
-            // Validate the token
-            bool isValid = await cognitoJwtManager.ValidateTokenAsync(token);
-
-            if (isValid)
-            {
-                logger.LogInformation("Incoming client JWT is valid - accepted connection for player: " + request.RemoteEndPoint.ToString());
-               
-                // If the token is valid, get the "sub" claim which is the account id
-                string? accountId = cognitoJwtManager.GetSubjectFromToken(token);
-
-                if (accountId != null)
-                {
-                    string? username = cognitoJwtManager.GetUsernameFromToken(token);
-
-                    if (username != null)
-                    {
-                        var playerEntity = await playerRepository.LoadOrCreatePlayerAccount(accountId, username);
-
-                        NetPeer peer = request.Accept();
-                        Player player = new Player(peer, playerEntity);
-
-                        connectedPlayers.Add(peer, player);
-                        
-                        return;
-                    }
-                }
-            }
-
-            // reject on any case, no exceptins - this is critical!
-            request.Reject();
-        }
-
-
-        private void LiteNetListener_ConnectionRequestEvent(ConnectionRequest request)
-        {
-            OnConnectionRequestAsync(request);
-        }
-
-
-        public bool IsRunning
-        {
-            get { return _isRunning; }
-            set { _isRunning = value; }
         }
     }
 }

@@ -1,12 +1,12 @@
 ﻿using CardTowers_GameServer.Shine.Messages;
+using CardTowers_GameServer.Shine.Messages.Interfaces;
 using LiteNetLib;
 using LiteNetLib.Utils;
 
-public class GameCreatedMessage : IHandledMessage
+public class GameCreatedMessage : INetworkMessage
 {
     public string Id { get; set; }
     public long ElapsedTicks { get; set; }
-
 
     public void Deserialize(NetDataReader reader)
     {

@@ -6,12 +6,12 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using CardTowers_GameServer.Shine.Messages;
+using CardTowers_GameServer.Shine.Messages.Interfaces;
 
-public class GameEndedMessagae : IHandledMessage
+public class GameEndedMessagae : INetworkMessage
 {
     public long ElapsedTicks { get; set; }
     public int WinnerId { get; set; }
-
 
     public void Deserialize(NetDataReader reader)
     {

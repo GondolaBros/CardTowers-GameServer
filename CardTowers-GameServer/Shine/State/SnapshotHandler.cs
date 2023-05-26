@@ -3,33 +3,30 @@ namespace CardTowers_GameServer.Shine.State
 {
     public class SnapshotHandler
     {
-        private Dictionary<DeltaType, Queue<GameStateSnapshot<IDelta>>> snapshots = new();
+        private Dictionary<SnapshotKey, Queue<StateSnapshot<IDelta>>> snapshots = new();
         private const int snapshotHistorySize = 100; // store the last 100 snapshots
 
-        public void StoreSnapshot(Dictionary<DeltaType, GameStateSnapshot<IDelta>> newSnapshots)
+        public void StoreSnapshot<TDelta>(SnapshotKey key, StateSnapshot<TDelta> newSnapshot) where TDelta : IDelta
         {
-            foreach (var pair in newSnapshots)
+            if (!snapshots.ContainsKey(key))
             {
-                if (!snapshots.ContainsKey(pair.Key))
-                {
-                    snapshots[pair.Key] = new Queue<GameStateSnapshot<IDelta>>();
-                }
-
-                if (snapshots[pair.Key].Count >= snapshotHistorySize)
-                {
-                    snapshots[pair.Key].Dequeue();
-                }
-
-                snapshots[pair.Key].Enqueue(pair.Value);
+                snapshots[key] = new Queue<StateSnapshot<IDelta>>();
             }
+
+            if (snapshots[key].Count >= snapshotHistorySize)
+            {
+                snapshots[key].Dequeue();
+            }
+
+            snapshots[key].Enqueue(newSnapshot as StateSnapshot<IDelta>);
         }
 
-        public GameStateSnapshot<IDelta> GetLatestSnapshot(DeltaType type)
+        public StateSnapshot<IDelta> GetLatestSnapshot(SnapshotKey key)
         {
-            if (!snapshots.ContainsKey(type))
-                throw new Exception("No snapshots for DeltaType " + type.ToString());
+            if (!snapshots.ContainsKey(key))
+                throw new Exception("No snapshots for key: " + key.EntityId + " - " + key.ComponentType);
 
-            return snapshots[type].Peek();
+            return snapshots[key].Peek();
         }
     }
 }

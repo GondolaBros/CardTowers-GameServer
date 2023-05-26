@@ -4,8 +4,9 @@ using CardTowers_GameServer.Shine.Handlers;
 using CardTowers_GameServer.Shine.Matchmaking;
 using CardTowers_GameServer.Shine.Util;
 using CardTowers_GameServer.Shine.Messages;
+using CardTowers_GameServer.Shine.Messages.Interfaces;
 
-public class MatchmakingMessage : IHandledMessage
+public class MatchmakingMessage : INetworkMessage
 {
     //public string Username { get; set; }
 

@@ -3,9 +3,11 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using CardTowers_GameServer.Shine.Data;
 using CardTowers_GameServer.Shine.Matchmaking;
+using CardTowers_GameServer.Shine.Messages.Interfaces;
 using CardTowers_GameServer.Shine.Models;
 using CardTowers_GameServer.Shine.State;
 using CardTowers_GameServer.Shine.Util;
+using LiteNetLib;
 
 namespace CardTowers_GameServer.Shine.State
 {
@@ -24,10 +26,20 @@ namespace CardTowers_GameServer.Shine.State
 
         bool started = false;
 
+        private ComponentStateHandler stateHandler;
+        private SnapshotHandler snapshotHandler;
+
         public GameSession()
         {
             Id = Guid.NewGuid().ToString();
+
+            // Instantiate the state handler and the snapshot handler.
+            //this.stateHandler = new ComponentStateHandler(packetProcessor);
+            this.snapshotHandler = new SnapshotHandler();
+
+
             PlayerStates = new Dictionary<Player, PlayerState>();
+
         }
 
 
@@ -37,44 +49,6 @@ namespace CardTowers_GameServer.Shine.State
             lastTickTime = ServerStopwatch.ElapsedMilliseconds;
             accumulatedDeltaTime = 0;
             started = true;
-        }
-
-        public void AddPlayer(Player player)
-        {
-            var playerState = new PlayerState();
-            PlayerStates.Add(player, playerState);
-        }
-
-        public void RemovePlayer(Player player)
-        {
-            PlayerStates.Remove(player);
-        }
-
-
-        public void Update()
-        {
-            if (started)
-            {
-                long currentTickTime = ServerStopwatch.ElapsedMilliseconds;
-                long deltaTime = currentTickTime - lastTickTime;
-
-                foreach (var playerState in PlayerStates.Values)
-                {
-                    playerState.Update(deltaTime);
-                }
-
-                lastTickTime = currentTickTime;
-            }
-        }
-
-        public long GetElapsedTime()
-        {
-            return ServerStopwatch.ElapsedMilliseconds;
-        }
-
-        public void Cleanup()
-        {
-            PlayerStates.Clear();
         }
 
         public void Stop(Player winner)
@@ -90,6 +64,19 @@ namespace CardTowers_GameServer.Shine.State
         }
 
 
+        public void AddPlayer(Player player)
+        {
+            var playerState = new PlayerState();
+            PlayerStates.Add(player, playerState);
+        }
+
+
+        public void RemovePlayer(Player player)
+        {
+            PlayerStates.Remove(player);
+        }
+
+
         public bool HasPlayer(int id)
         {
             foreach (var player in PlayerStates.Keys)
@@ -97,8 +84,38 @@ namespace CardTowers_GameServer.Shine.State
                 if (player.Peer.Id == id)
                     return true;
             }
-
             return false;
+        }
+
+
+        public void Update()
+        {
+            if (started)
+            {
+                long currentTickTime = ServerStopwatch.ElapsedMilliseconds;
+                long deltaTime = currentTickTime - lastTickTime;
+
+                foreach (var playerState in PlayerStates.Values)
+                {
+                    //playerState.Update(deltaTime, snapshotHandler);
+                }
+
+                lastTickTime = currentTickTime;
+            }
+        }
+
+
+
+        public void HandleGameMessage(IGameMessage gameMessage, NetPeer peer)
+        {
+            // TODO: Handle the incoming game message
+            // Depending on the specific game message type, this could involve updating game state, sending messages to other clients, etc.
+        }
+
+
+        public long GetElapsedTime()
+        {
+            return ServerStopwatch.ElapsedMilliseconds;
         }
 
 
@@ -117,5 +134,12 @@ namespace CardTowers_GameServer.Shine.State
                 Stop(PlayerStates.Keys.GetEnumerator().Current);
             }
         }
+
+
+        public void Cleanup()
+        {
+            PlayerStates.Clear();
+        }
+
     }
 }

@@ -12,7 +12,6 @@ namespace CardTowers_GameServer.Shine.Models
         private int currentMana;
         private long lastGenerationTime;
 
-
         public Mana()
         {
             currentMana = INITIAL_MANA;
@@ -21,9 +20,8 @@ namespace CardTowers_GameServer.Shine.Models
 
         public void SetCurrentMana(int mana)
         {
-            currentMana = mana;
+            currentMana = Math.Min(mana, MAX_MANA);
         }
-
 
         public int GetCurrentMana()
         {
@@ -37,24 +35,31 @@ namespace CardTowers_GameServer.Shine.Models
 
             if (manaGenerated > 0)
             {
-                SetCurrentMana(Math.Min(currentMana + manaGenerated, MAX_MANA)); // Use the new setter method
+                SetCurrentMana(currentMana + manaGenerated);
                 lastGenerationTime += manaGenerated * MANA_GENERATION_INTERVAL_MS;
             }
         }
+
 
         public bool CanSpendMana(int amount)
         {
             return currentMana >= amount;
         }
 
+
         public bool SpendMana(int amount)
         {
             if (CanSpendMana(amount))
             {
-                SetCurrentMana(currentMana - amount); // Use the new setter method
+                SetCurrentMana(currentMana - amount);
                 return true;
             }
-            return false;
+            else
+            {
+                // Provide feedback to the player that they don't have enough mana
+                // This will depend on your game's specific mechanics and user interface
+                return false;
+            }
         }
     }
 }
