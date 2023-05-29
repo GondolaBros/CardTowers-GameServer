@@ -52,6 +52,7 @@ namespace CardTowers_GameServer.Shine.State
             started = true;
         }
 
+
         public void Stop(Player winner)
         {
             ServerStopwatch.Stop();

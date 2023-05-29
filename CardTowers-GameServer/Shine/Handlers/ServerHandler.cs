@@ -420,7 +420,8 @@ namespace CardTowers_GameServer.Shine.Handlers
 
                     if (p != null)
                     {
-                        // TODO: properly handle game session disconnects. 
+                        // TODO: properly handle game session disconnects.
+                        logger.LogInformation("trying to remove player from game session: " + p);
                         gameSession.PlayerDisconnected(p);
                     }
                 }
