@@ -6,7 +6,7 @@ using CardTowers_GameServer.Shine.Util;
 using CardTowers_GameServer.Shine.Messages;
 using CardTowers_GameServer.Shine.Messages.Interfaces;
 
-public class MatchmakingMessage : INetworkMessage
+public class MatchmakingMessage : ISystemMessage
 {
     //public string Username { get; set; }
 

@@ -1,100 +1,84 @@
-﻿using CardTowers_GameServer.Shine.State;
+﻿using System;
+using CardTowers_GameServer.Shine.Messages.Interfaces;
 
-public abstract class ComponentStateBase<TDelta> : IComponentState<TDelta> where TDelta : IDelta, new()
+namespace CardTowers_GameServer.Shine.State
 {
-    // Flag indicating if the component is event-driven
-    private bool isEventDriven;
-
-    // Queue to store delta history
-    private Queue<TDelta> deltaHistory;
-
-    // Event triggered when a delta is generated
-    public event Action<TDelta>? DeltaGenerated;
-
-    public abstract void ApplyDelta(TDelta delta); // Abstract method to apply a delta to the component
-    public abstract TDelta GenerateDelta(); // Abstract method to generate a new delta
-    public abstract void Update(long deltaTime); // Abstract method to update the components game logic
-
-    // Frequency at which deltas are generated
-    public virtual Frequency Frequency { get; private set; }
-
-    public ComponentStateBase(Frequency syncFrequency)
+    public abstract class ComponentStateBase : IComponentState
     {
-        Frequency = syncFrequency;
+        public Frequency Frequency { get; private set; }
+        public string ComponentId { get; set; }
+        public string GameSessionId { get; set; }
+            
+        protected IGameMessage? currentDelta;
 
-        // Check if the component is event-driven
-        isEventDriven = Frequency == Frequency.EventBased;
+        public abstract IGameMessage GenerateDelta();
+        public abstract void Update(long deltaTime);
+        public abstract void ApplyDelta(IGameMessage delta);
 
-        // Create a new queue for delta history
-        deltaHistory = new Queue<TDelta>();
-    }
+        public event Action<IGameMessage> OnDeltaCreated;
 
-    public void InternalUpdate(long deltaTime)
-    {
-        BaseUpdate(deltaTime);
-    }
-
-    private void BaseUpdate(long deltaTime)
-    {
-        // Call the specific update logic for the component
-        Update(deltaTime);
-
-        // Skip delta generation if the component is event-driven
-        if (isEventDriven)
-            return;
-
-        // Check if enough time has passed to generate a new delta
-        if (ShouldGenerateDelta(deltaTime))
+        protected ComponentStateBase(Frequency frequency)
         {
-            // Generate a new delta and store it in the snapshot
-            TDelta delta = GenerateDelta();
-
-            // Trigger the DeltaGenerated event
-            DeltaGenerated?.Invoke(delta);
-
-            // Apply the generated delta to the component
-            ApplyDelta(delta);
-
-            // Add the delta to the history
-            deltaHistory.Enqueue(delta);
+            Frequency = frequency;
         }
-    }
 
-    public virtual bool IsStateConsistent()
-    {
-        // Dummy return. Implement game-specific logic here.
-        return true;
-    }
-
-    public bool ShouldGenerateDelta(long deltaTime)
-    {
-        // Check if enough time has passed since the last delta generation
-        return deltaTime >= (long)Frequency;
-    }
-
-    public virtual IDelta CreateNewDeltaInstance()
-    {
-        return new TDelta();
-    }
-
-    // Get the delta history of the component
-    public IEnumerable<TDelta> GetDeltaHistory()
-    {
-        return deltaHistory;
-    }
-
-    // Clear the delta history of the component
-    public void ClearDeltaHistory()
-    {
-        deltaHistory.Clear();
-    }
-
-    // Apply a series of deltas to the component
-    public void ApplyDeltaHistory(IEnumerable<TDelta> deltas)
-    {
-        foreach (var delta in deltas)
+        public void ProcessUpdate(long deltaTime)
         {
-            ApplyDelta(delta);
+            // Call the component-specific update method
+            Update(deltaTime);
+
+            // If the component's frequency isn't event-based, try to generate and apply a delta
+            if (Frequency != Frequency.EventBased && ShouldGenerateDelta(deltaTime))
+            {
+                currentDelta = GenerateDelta();
+
+                OnDeltaCreated?.Invoke(currentDelta);
+
+                // Validate the delta before applying
+                if (IsValidDelta(currentDelta))
+                {
+                    ApplyDelta(currentDelta);
+                }
+                else
+                {
+                    HandleInvalidDelta(currentDelta);
+                }
+            }
+        }
+
+        public bool ShouldGenerateDelta(long deltaTime)
+        {
+            // If the elapsed time is greater or equal to the frequency, it's time to generate a delta
+            return deltaTime >= (long)Frequency;
+        }
+
+        public virtual IGameMessage CreateNewDeltaInstance()
+        {
+            // This function can be overridden in child classes to create a new instance of the specific IGameMessage type.
+            throw new NotImplementedException("CreateNewDeltaInstance should be implemented in a child class.");
+        }
+
+        public IGameMessage? GetCurrentDelta()
+        {
+            return currentDelta;
+        }
+
+        // Validate the delta before applying
+        public virtual bool IsValidDelta(IGameMessage delta)
+        {
+            // Implement validation logic specific to the component
+            // Return true if the delta is valid; otherwise, return false
+            // Perform necessary checks based on the component's requirements
+            // Example: Check if the delta falls within valid bounds, respects constraints, or complies with specific rules
+            return true;
+        }
+
+        // Handle an invalid delta
+        public virtual void HandleInvalidDelta(IGameMessage delta)
+        {
+            // Implement handling logic for invalid deltas
+            // This can include logging, notifying, or taking corrective actions based on your game's requirements
+            // Example: Log an error, notify relevant systems or components, or trigger specific actions to recover from the error gracefully
         }
     }
 }

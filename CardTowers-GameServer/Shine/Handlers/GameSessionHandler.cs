@@ -48,7 +48,7 @@ namespace CardTowers_GameServer.Shine.Handlers
 
         public void RouteGameMessage(IGameMessage gameMessage, NetPeer peer)
         {
-            var sessionId = gameMessage.GameSessionId;
+            var sessionId = gameMessage.GameSessionId.ToString();
 
             if (gameSessions.ContainsKey(sessionId))
             {

@@ -36,4 +36,5 @@
     <Folder Include="Shine\State\Deltas\" />
     <Folder Include="Shine\Messages\Interfaces\" />
   </ItemGroup>
+
 </Project>

@@ -15,7 +15,7 @@ namespace CardTowers_GameServer.Shine.Models
         public Mana()
         {
             currentMana = INITIAL_MANA;
-            lastGenerationTime = DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond;
+            lastGenerationTime = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
         }
 
         public void SetCurrentMana(int mana)
@@ -40,12 +40,10 @@ namespace CardTowers_GameServer.Shine.Models
             }
         }
 
-
         public bool CanSpendMana(int amount)
         {
             return currentMana >= amount;
         }
-
 
         public bool SpendMana(int amount)
         {
@@ -56,8 +54,6 @@ namespace CardTowers_GameServer.Shine.Models
             }
             else
             {
-                // Provide feedback to the player that they don't have enough mana
-                // This will depend on how we want to handle it.. ui update etc?
                 return false;
             }
         }

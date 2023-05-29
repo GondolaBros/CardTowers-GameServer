@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 using CardTowers_GameServer.Shine.Messages;
 using CardTowers_GameServer.Shine.Messages.Interfaces;
 
-public class GameEndedMessagae : INetworkMessage
+public class GameEndedMessagae : ISystemMessage
 {
     public long ElapsedTicks { get; set; }
     public int WinnerId { get; set; }

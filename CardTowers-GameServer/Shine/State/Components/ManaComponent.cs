@@ -4,49 +4,57 @@ using CardTowers_GameServer.Shine.State.Deltas;
 
 namespace CardTowers_GameServer.Shine.State.Components
 {
-    public class ManaComponent : ComponentStateBase<ManaDelta>
+    using CardTowers_GameServer.Shine.Messages.Interfaces;
+    using CardTowers_GameServer.Shine.Models;
+
+    public class ManaComponent : ComponentStateBase
     {
         private Mana mana;
 
-        public ManaComponent(Frequency freq) : base(freq)
+        public ManaComponent(Frequency freq)
+            : base(freq)
         {
             mana = new Mana();
         }
 
-
-        public override void ApplyDelta(ManaDelta delta)
+        public override void ApplyDelta(IGameMessage delta)
         {
-            // Negative change is spent mana, positive change is gained mana
-            if (delta.ManaChange < 0)
+            if (delta is ManaDeltaMessage manaDelta)
             {
-                mana.SpendMana(-delta.ManaChange);
+                // Negative change is spent mana, positive change is gained mana
+                if (manaDelta.ManaChange < 0)
+                {
+                    if (mana.CanSpendMana(-manaDelta.ManaChange))
+                    {
+                        mana.SpendMana(-manaDelta.ManaChange);
+                    }
+                    // else log an error or handle the situation appropriately
+                }
+                else
+                {
+                    mana.SetCurrentMana(mana.GetCurrentMana() + manaDelta.ManaChange);
+                }
             }
             else
             {
-                mana.SetCurrentMana(mana.GetCurrentMana() + delta.ManaChange);
+                throw new ArgumentException($"Invalid delta type: {delta.GetType()}");
             }
         }
 
 
-        public override ManaDelta GenerateDelta()
+        public override IGameMessage GenerateDelta()
         {
-            ManaDelta delta = new ManaDelta();
-
-            // Generate a delta of mana generation per second 
-            // or generation per frequency based on your game's need
-            // This can be zero if no mana was generated
-            long currentTickTime = DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond;
+            long currentTickTime = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
             mana.Update(currentTickTime);
 
-            delta.ManaChange = mana.GetCurrentMana();
-
-            return delta;
+            return new ManaDeltaMessage(ComponentId, GameSessionId, mana.GetCurrentMana());
         }
 
         public override void Update(long deltaTime)
         {
             // Your game specific logic goes here
-            // For example, you could check if there are any entities that should generate mana and call their generate mana method
+            long currentTickTime = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+            mana.Update(currentTickTime);
         }
     }
 

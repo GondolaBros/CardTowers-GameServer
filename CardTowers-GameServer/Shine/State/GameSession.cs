@@ -2,12 +2,15 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using CardTowers_GameServer.Shine.Data;
+using CardTowers_GameServer.Shine.Handlers;
 using CardTowers_GameServer.Shine.Matchmaking;
 using CardTowers_GameServer.Shine.Messages.Interfaces;
 using CardTowers_GameServer.Shine.Models;
 using CardTowers_GameServer.Shine.State;
+using CardTowers_GameServer.Shine.State.Deltas;
 using CardTowers_GameServer.Shine.Util;
 using LiteNetLib;
+using LiteNetLib.Utils;
 
 namespace CardTowers_GameServer.Shine.State
 {
@@ -26,17 +29,15 @@ namespace CardTowers_GameServer.Shine.State
 
         bool started = false;
 
-        private ComponentStateHandler stateHandler;
-        private SnapshotHandler snapshotHandler;
+        private readonly ServerHandler serverHandler;
+        private readonly GameMessageSerializer gameMessageSerializer;
 
-        public GameSession()
+        public GameSession(ServerHandler serverHandler, GameMessageSerializer gameMessageSerializer)
         {
             Id = Guid.NewGuid().ToString();
 
-            // Instantiate the state handler and the snapshot handler.
-            //this.stateHandler = new ComponentStateHandler(packetProcessor);
-            this.snapshotHandler = new SnapshotHandler();
-
+            this.serverHandler = serverHandler;
+            this.gameMessageSerializer = gameMessageSerializer;
 
             PlayerStates = new Dictionary<Player, PlayerState>();
 
@@ -66,7 +67,7 @@ namespace CardTowers_GameServer.Shine.State
 
         public void AddPlayer(Player player)
         {
-            var playerState = new PlayerState();
+            var playerState = new PlayerState(this.Id);
             PlayerStates.Add(player, playerState);
         }
 
@@ -97,7 +98,7 @@ namespace CardTowers_GameServer.Shine.State
 
                 foreach (var playerState in PlayerStates.Values)
                 {
-                    //playerState.Update(deltaTime, snapshotHandler);
+                    playerState.ComponentStateHandler.Update(deltaTime);
                 }
 
                 lastTickTime = currentTickTime;
@@ -105,11 +106,13 @@ namespace CardTowers_GameServer.Shine.State
         }
 
 
-
         public void HandleGameMessage(IGameMessage gameMessage, NetPeer peer)
         {
-            // TODO: Handle the incoming game message
-            // Depending on the specific game message type, this could involve updating game state, sending messages to other clients, etc.
+            if (this.HasPlayer(peer.Id))
+            {
+                PlayerState playerState = this.PlayerStates.Where(p => p.Key.Peer.Id == peer.Id).FirstOrDefault().Value;
+                playerState.ComponentStateHandler.ReceiveAndApplyDelta(gameMessage);
+            }
         }
 
 
@@ -140,6 +143,5 @@ namespace CardTowers_GameServer.Shine.State
         {
             PlayerStates.Clear();
         }
-
     }
 }

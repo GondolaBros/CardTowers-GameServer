@@ -3,7 +3,7 @@ using CardTowers_GameServer.Shine.Messages.Interfaces;
 using LiteNetLib;
 using LiteNetLib.Utils;
 
-public class GameCreatedMessage : INetworkMessage
+public class GameCreatedMessage : ISystemMessage
 {
     public string Id { get; set; }
     public long ElapsedTicks { get; set; }

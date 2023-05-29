@@ -1,32 +1,41 @@
 ﻿using System;
-namespace CardTowers_GameServer.Shine.State
+using System.Collections.Generic;
+using CardTowers_GameServer.Shine.Messages.Interfaces;
+using CardTowers_GameServer.Shine.State;
+
+public class SnapshotHandler
 {
-    public class SnapshotHandler
+    private Dictionary<SnapshotKey, StateSnapshot<IGameMessage>> snapshots = new Dictionary<SnapshotKey, StateSnapshot<IGameMessage>>();
+
+
+    public void StoreSnapshot(SnapshotKey snapshotKey, StateSnapshot<IGameMessage> snapshot)
     {
-        private Dictionary<SnapshotKey, Queue<StateSnapshot<IDelta>>> snapshots = new();
-        private const int snapshotHistorySize = 100; // store the last 100 snapshots
+        snapshots[snapshotKey] = snapshot;
+    }
 
-        public void StoreSnapshot<TDelta>(SnapshotKey key, StateSnapshot<TDelta> newSnapshot) where TDelta : IDelta
+
+    public StateSnapshot<IGameMessage> GetLatestSnapshot(SnapshotKey snapshotKey)
+    {
+        if (snapshots.TryGetValue(snapshotKey, out var snapshot))
         {
-            if (!snapshots.ContainsKey(key))
-            {
-                snapshots[key] = new Queue<StateSnapshot<IDelta>>();
-            }
-
-            if (snapshots[key].Count >= snapshotHistorySize)
-            {
-                snapshots[key].Dequeue();
-            }
-
-            snapshots[key].Enqueue(newSnapshot as StateSnapshot<IDelta>);
+            return snapshot;
         }
-
-        public StateSnapshot<IDelta> GetLatestSnapshot(SnapshotKey key)
+        else
         {
-            if (!snapshots.ContainsKey(key))
-                throw new Exception("No snapshots for key: " + key.EntityId + " - " + key.ComponentType);
+            throw new InvalidOperationException("No snapshot exists for SnapshotKey " + snapshotKey.ToString());
+        }
+    }
 
-            return snapshots[key].Peek();
+
+    public StateSnapshot<IGameMessage>? GetSnapshot(SnapshotKey snapshotKey)
+    {
+        if (snapshots.TryGetValue(snapshotKey, out var snapshot))
+        {
+            return snapshot;
+        }
+        else
+        {
+            return null;
         }
     }
 }

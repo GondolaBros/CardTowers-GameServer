@@ -3,12 +3,12 @@ namespace CardTowers_GameServer.Shine.State
 {
     public struct SnapshotKey
     {
-        public Guid EntityId { get; }
-        public DeltaType ComponentType { get; }
+        public string ComponentId { get; }
+        public GameMessageType ComponentType { get; }
 
-        public SnapshotKey(Guid entityId, DeltaType componentType)
+        public SnapshotKey(string componentId, GameMessageType componentType)
         {
-            EntityId = entityId;
+            ComponentId = componentId;
             ComponentType = componentType;
         }
     }

@@ -1,0 +1,10 @@
+/Users/devontomlin/Documents/GitHub/CardTowers-GameServer/CardTowers_StateDelta_Generator/bin/Debug/netstandard2.0/CardTowers_StateDelta_Generator.deps.json
+/Users/devontomlin/Documents/GitHub/CardTowers-GameServer/CardTowers_StateDelta_Generator/bin/Debug/netstandard2.0/CardTowers_StateDelta_Generator.dll
+/Users/devontomlin/Documents/GitHub/CardTowers-GameServer/CardTowers_StateDelta_Generator/bin/Debug/netstandard2.0/CardTowers_StateDelta_Generator.pdb
+/Users/devontomlin/Documents/GitHub/CardTowers-GameServer/CardTowers_StateDelta_Generator/obj/Debug/netstandard2.0/CardTowers_StateDelta_Generator.csproj.AssemblyReference.cache
+/Users/devontomlin/Documents/GitHub/CardTowers-GameServer/CardTowers_StateDelta_Generator/obj/Debug/netstandard2.0/CardTowers_StateDelta_Generator.GeneratedMSBuildEditorConfig.editorconfig
+/Users/devontomlin/Documents/GitHub/CardTowers-GameServer/CardTowers_StateDelta_Generator/obj/Debug/netstandard2.0/CardTowers_StateDelta_Generator.AssemblyInfoInputs.cache
+/Users/devontomlin/Documents/GitHub/CardTowers-GameServer/CardTowers_StateDelta_Generator/obj/Debug/netstandard2.0/CardTowers_StateDelta_Generator.AssemblyInfo.cs
+/Users/devontomlin/Documents/GitHub/CardTowers-GameServer/CardTowers_StateDelta_Generator/obj/Debug/netstandard2.0/CardTowers_StateDelta_Generator.csproj.CoreCompileInputs.cache
+/Users/devontomlin/Documents/GitHub/CardTowers-GameServer/CardTowers_StateDelta_Generator/obj/Debug/netstandard2.0/CardTowers_StateDelta_Generator.dll
+/Users/devontomlin/Documents/GitHub/CardTowers-GameServer/CardTowers_StateDelta_Generator/obj/Debug/netstandard2.0/CardTowers_StateDelta_Generator.pdb

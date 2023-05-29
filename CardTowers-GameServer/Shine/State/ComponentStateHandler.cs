@@ -1,124 +1,71 @@
-﻿using CardTowers_GameServer.Shine.State;
+﻿using CardTowers_GameServer.Shine.Messages.Interfaces;
+using CardTowers_GameServer.Shine.State;
 using LiteNetLib;
 using LiteNetLib.Utils;
+using System.Collections.Generic;
 
-public class ComponentStateHandler
+
+namespace CardTowers_GameServer.Shine.State
 {
-    private readonly Dictionary<DeltaType, IComponentState<IDelta>> stateComponents = new Dictionary<DeltaType, IComponentState<IDelta>>();
-    private NetPacketProcessor netPacketProcessor;
-
-    public ComponentStateHandler(NetPacketProcessor netPacketProcessor)
+    public class ComponentStateHandler
     {
-        this.netPacketProcessor = netPacketProcessor;
-    }
+        public readonly Dictionary<string, IComponentState> StateComponents = new Dictionary<string, IComponentState>();
+        private IGameMessageSerializer gameMessageSerializer;
 
-    public void AddStateComponent<TDelta>(IComponentState<TDelta> stateComponent) where TDelta : IDelta, new()
-    {
-        DeltaType deltaType = stateComponent.GenerateDelta().Type;
-        if (stateComponents.ContainsKey(deltaType))
+        public ComponentStateHandler(IGameMessageSerializer gameMessageSerializer)
         {
-            throw new InvalidOperationException("A component with DeltaType " + deltaType.ToString() + " has already been added.");
+            this.gameMessageSerializer = gameMessageSerializer;
         }
-        stateComponents[deltaType] = (IComponentState<IDelta>)stateComponent;
-    }
 
-    public void GenerateAndSendAllDeltas(NetPeer clientPeer, SnapshotHandler snapshotHandler, long deltaTime)
-    {
-        NetDataWriter writer = new NetDataWriter();
-
-        foreach (var pair in stateComponents)
+        public void AddStateComponent(IComponentState stateComponent, string componentId, string gameSessionId)
         {
-            if (pair.Value.Frequency != Frequency.EventBased)
+            if (StateComponents.ContainsKey(componentId))
             {
-                IDelta delta = pair.Value.GenerateDelta();
-                if (delta != null)
-                {
-                    // Apply the generated delta to the component
-                    pair.Value.ApplyDelta(delta);
+                throw new InvalidOperationException($"A component with ID {componentId} has already been added.");
+            }
+            StateComponents[componentId] = stateComponent;
+            stateComponent.ComponentId = componentId;
+            stateComponent.GameSessionId = gameSessionId;
+        }
 
-                    // Generate a snapshot key
-                    SnapshotKey snapshotKey = new SnapshotKey(Guid.NewGuid(), delta.Type);
-
-                    // Generate a new snapshot
-                    StateSnapshot<IDelta> newSnapshot = new StateSnapshot<IDelta>(delta, deltaTime);
-
-                    // Store the new snapshot
-                    snapshotHandler.StoreSnapshot(snapshotKey, newSnapshot);
-
-                    // Write the delta type to the packet
-                    writer.Put((int)delta.Type);
-
-                    // Serialize the delta
-                    delta.Serialize(writer);
-                }
+        public void Update(long deltaTime)
+        {
+            foreach (var pair in StateComponents)
+            {
+                pair.Value.ProcessUpdate(deltaTime);
             }
         }
 
-        // Send the packet containing all deltas to the client
-        clientPeer.Send(writer, DeliveryMethod.ReliableOrdered);
-    }
-
-
-
-    public void ReceiveAndApplyDelta(NetPacketReader packet, NetPeer sender)
-    {
-        while (packet.AvailableBytes > 0)
+        public void SendDeltas(NetPeer clientPeer)
         {
-            // Read the delta type from the packet
-            DeltaType deltaType = (DeltaType)packet.GetInt();
+            NetDataWriter writer = new NetDataWriter();
 
-            if (stateComponents.TryGetValue(deltaType, out var component))
+            foreach (var pair in StateComponents)
             {
-                // Create a new instance of the delta
-                IDelta delta = component.CreateNewDeltaInstance();
+                IComponentState stateComponent = pair.Value;
+                IGameMessage? currentDelta = stateComponent.GetCurrentDelta();
 
-                // Deserialize the delta from the packet
-                delta.Deserialize(packet);
+                if (currentDelta != null)
+                {
+                    gameMessageSerializer.Serialize(currentDelta, writer);
+                }
+            }
 
-                // Apply the delta to the component
+            clientPeer.Send(writer, DeliveryMethod.ReliableOrdered);
+        }
+
+
+        public void ReceiveAndApplyDelta(IGameMessage delta)
+        {
+            string componentId = delta.ComponentId;
+            if (StateComponents.TryGetValue(componentId, out var component))
+            {
                 component.ApplyDelta(delta);
             }
             else
             {
-                throw new InvalidOperationException("Delta type " + deltaType.ToString() + " has not been registered.");
+                throw new Exception($"Component not found with id: {componentId}");
             }
-        }
-    }
-
-    public void UpdateAll(long deltaTime)
-    {
-        foreach (var pair in stateComponents)
-        {
-            pair.Value.InternalUpdate(deltaTime);
-        }
-    }
-
-    public Dictionary<DeltaType, IDelta> GenerateAllDeltas()
-    {
-        var deltas = new Dictionary<DeltaType, IDelta>();
-        foreach (var pair in stateComponents)
-        {
-            var delta = pair.Value.GenerateDelta();
-            if (delta != null)
-            {
-                deltas[pair.Key] = delta;
-            }
-        }
-        return deltas;
-    }
-
-    public void ApplySnapshot(DeltaType type, Guid entityId, SnapshotHandler snapshotHandler)
-    {
-        SnapshotKey snapshotKey = new SnapshotKey(entityId, type);
-        StateSnapshot<IDelta> snapshot = snapshotHandler.GetLatestSnapshot(snapshotKey);
-
-        if (stateComponents.TryGetValue(type, out var component))
-        {
-            component.ApplyDelta(snapshot.State);
-        }
-        else
-        {
-            throw new InvalidOperationException("Delta type " + type.ToString() + " has not been registered.");
         }
     }
 }

@@ -1,17 +1,17 @@
 ﻿using System;
+using CardTowers_GameServer.Shine.Messages.Interfaces;
+
 namespace CardTowers_GameServer.Shine.State
 {
-    public class StateSnapshot<TDelta> where TDelta : IDelta
+    public class StateSnapshot<TGameMessage> where TGameMessage : IGameMessage
     {
-        public TDelta State { get; private set; }
-        public long Timestamp { get; private set; }
-        public long GameTime { get; private set; }
+        public TGameMessage State { get; private set; }
+        public long TimeStamp { get; private set; }  // Time when the snapshot was taken
 
-        public StateSnapshot(TDelta state, long gameTime)
+        public StateSnapshot(TGameMessage state, long timeStamp)
         {
             State = state;
-            GameTime = gameTime;
-            Timestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+            TimeStamp = timeStamp;
         }
     }
 }
