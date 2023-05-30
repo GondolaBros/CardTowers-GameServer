@@ -45,20 +45,27 @@ namespace CardTowers_GameServer.Shine.State
         public void SendServerActions(NetPeer clientPeer)
         {
             NetDataWriter writer = new NetDataWriter();
+            bool hasServerAction = false;
 
             foreach (var pair in StateComponents)
             {
                 IComponentState stateComponent = pair.Value;
-                IGameMessage serverAction = stateComponent.GetCurrentServerAction();
+                IGameMessage? serverAction = stateComponent.GetCurrentServerAction();
 
                 if (serverAction != null)
                 {
                     gameMessageSerializer.Serialize(serverAction, writer);
                     stateComponent.ResetCurrentServerAction(); // Reset the current server action after sending
+                    hasServerAction = true;
                 }
             }
-            clientPeer.Send(writer, DeliveryMethod.ReliableOrdered);
+
+            if (hasServerAction)
+            {
+                clientPeer.Send(writer, DeliveryMethod.ReliableOrdered);
+            }
         }
+
 
 
         public void ReceiveAndApplyClientAction(IGameMessage clientAction)

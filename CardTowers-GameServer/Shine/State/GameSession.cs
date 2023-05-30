@@ -97,9 +97,13 @@ namespace CardTowers_GameServer.Shine.State
                 long currentTickTime = ServerStopwatch.ElapsedMilliseconds;
                 DeltaTime = currentTickTime - lastTickTime;
 
-                foreach (var playerState in PlayerStates.Values)
+                foreach (var playerObject in PlayerStates)
                 {
+                    Player player = playerObject.Key;
+                    PlayerState playerState = playerObject.Value;
+
                     playerState.ComponentStateHandler.Update(DeltaTime);
+                    playerState.ComponentStateHandler.SendServerActions(player.Peer);
                 }
 
                 lastTickTime = currentTickTime;
