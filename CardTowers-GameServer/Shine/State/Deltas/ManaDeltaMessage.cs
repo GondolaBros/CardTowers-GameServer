@@ -11,9 +11,11 @@ namespace CardTowers_GameServer.Shine.State.Deltas
         public GameMessageType MessageType { get; set; } = GameMessageType.Mana;
         public string GameSessionId { get; set; }
         public string ComponentId { get; set; }
-        public int ManaChange { get; set; }
+        public float ManaChange { get; set; }
 
-        public ManaDeltaMessage(string componentId, string gameSessionId, int manaChange)
+        public ManaDeltaMessage() { }
+
+        public ManaDeltaMessage(string componentId, string gameSessionId, float manaChange)
         {
             GameSessionId = gameSessionId;
             ComponentId = componentId;
@@ -22,16 +24,12 @@ namespace CardTowers_GameServer.Shine.State.Deltas
 
         public void Serialize(NetDataWriter writer)
         {
-            writer.Put(GameSessionId);
-            writer.Put(ComponentId);
             writer.Put(ManaChange);
         }
 
         public void Deserialize(NetDataReader reader)
         {
-            GameSessionId = reader.GetString();
-            ComponentId = reader.GetString();
-            ManaChange = reader.GetInt();
+            ManaChange = reader.GetFloat();
         }
 
         public void Handle(NetPeer peer)

@@ -7,6 +7,7 @@ using CardTowers_GameServer.Shine.Matchmaking;
 using CardTowers_GameServer.Shine.Messages.Interfaces;
 using CardTowers_GameServer.Shine.Models;
 using CardTowers_GameServer.Shine.State;
+using CardTowers_GameServer.Shine.State.Components;
 using CardTowers_GameServer.Shine.State.Deltas;
 using CardTowers_GameServer.Shine.Util;
 using LiteNetLib;
@@ -23,7 +24,6 @@ namespace CardTowers_GameServer.Shine.State
         public event Action<GameSession> OnGameSessionStopped;
 
         private long lastTickTime;
-        private long accumulatedDeltaTime;
 
         public int WinnerId { get; private set; }
 
@@ -31,6 +31,8 @@ namespace CardTowers_GameServer.Shine.State
 
         private readonly ServerHandler serverHandler;
         private readonly GameMessageSerializer gameMessageSerializer;
+
+        public long DeltaTime { get; private set; }
 
         public GameSession(ServerHandler serverHandler, GameMessageSerializer gameMessageSerializer)
         {
@@ -40,7 +42,6 @@ namespace CardTowers_GameServer.Shine.State
             this.gameMessageSerializer = gameMessageSerializer;
 
             PlayerStates = new Dictionary<Player, PlayerState>();
-
         }
 
 
@@ -48,7 +49,6 @@ namespace CardTowers_GameServer.Shine.State
         {
             ServerStopwatch = Stopwatch.StartNew();
             lastTickTime = ServerStopwatch.ElapsedMilliseconds;
-            accumulatedDeltaTime = 0;
             started = true;
         }
 
@@ -95,11 +95,11 @@ namespace CardTowers_GameServer.Shine.State
             if (started)
             {
                 long currentTickTime = ServerStopwatch.ElapsedMilliseconds;
-                long deltaTime = currentTickTime - lastTickTime;
+                DeltaTime = currentTickTime - lastTickTime;
 
                 foreach (var playerState in PlayerStates.Values)
                 {
-                    playerState.ComponentStateHandler.Update(deltaTime);
+                    playerState.ComponentStateHandler.Update(DeltaTime);
                 }
 
                 lastTickTime = currentTickTime;
@@ -107,12 +107,13 @@ namespace CardTowers_GameServer.Shine.State
         }
 
 
+
         public void HandleGameMessage(IGameMessage gameMessage, NetPeer peer)
         {
             if (this.HasPlayer(peer.Id))
             {
                 PlayerState playerState = this.PlayerStates.Where(p => p.Key.Peer.Id == peer.Id).FirstOrDefault().Value;
-                playerState.ComponentStateHandler.ReceiveAndApplyDelta(gameMessage);
+                playerState.ComponentStateHandler.ReceiveAndApplyClientAction(gameMessage);
             }
         }
 
@@ -135,7 +136,19 @@ namespace CardTowers_GameServer.Shine.State
             if (PlayerStates.Count == 1)
             {
                 Console.WriteLine("GameSession player count: " + PlayerStates.Count);
-                Stop(PlayerStates.Keys.GetEnumerator().Current);
+
+                Player? playerWhoWon = PlayerStates.Keys.FirstOrDefault();
+
+                if (playerWhoWon != null)
+                {
+                    Console.WriteLine("Player who won: " + playerWhoWon);
+
+                    Stop(playerWhoWon);
+                }
+                else
+                {
+                    Console.WriteLine("No player found.");
+                }
             }
         }
 

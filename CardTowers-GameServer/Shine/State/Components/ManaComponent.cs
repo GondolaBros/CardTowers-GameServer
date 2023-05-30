@@ -1,62 +1,95 @@
 ﻿using System;
+using CardTowers_GameServer.Shine.Messages.Interfaces;
 using CardTowers_GameServer.Shine.Models;
 using CardTowers_GameServer.Shine.State.Deltas;
 
 namespace CardTowers_GameServer.Shine.State.Components
 {
-    using CardTowers_GameServer.Shine.Messages.Interfaces;
-    using CardTowers_GameServer.Shine.Models;
-
     public class ManaComponent : ComponentStateBase
     {
-        private Mana mana;
+        public Mana ManaModel;
 
         public ManaComponent(Frequency freq)
             : base(freq)
         {
-            mana = new Mana();
+            ManaModel = new Mana();
         }
 
-        public override void ApplyDelta(IGameMessage delta)
+        public override void ApplyServerAction(IGameMessage serverAction)
         {
-            if (delta is ManaDeltaMessage manaDelta)
+            if (serverAction is ManaDeltaMessage manaDelta)
+            {
+                // Positive change is gained mana
+                ManaModel.SetCurrentMana(ManaModel.GetCurrentMana() + manaDelta.ManaChange);
+            }
+            else
+            {
+                throw new ArgumentException($"Invalid server action type: {serverAction.GetType()}");
+            }
+        }
+
+        public override bool IsValidClientAction(IGameMessage clientAction)
+        {
+            if (clientAction is ManaDeltaMessage manaDelta)
             {
                 // Negative change is spent mana, positive change is gained mana
                 if (manaDelta.ManaChange < 0)
                 {
-                    if (mana.CanSpendMana(-manaDelta.ManaChange))
-                    {
-                        mana.SpendMana(-manaDelta.ManaChange);
-                    }
-                    // else log an error or handle the situation appropriately
+                    return ManaModel.CanSpendMana(-manaDelta.ManaChange);
                 }
                 else
                 {
-                    mana.SetCurrentMana(mana.GetCurrentMana() + manaDelta.ManaChange);
+                    // No additional validation needed for positive mana change
+                    return true;
+                }
+            }
+
+            // Invalid client action type
+            return false;
+        }
+
+        public override void ApplyClientAction(IGameMessage clientAction)
+        {
+            if (clientAction is ManaDeltaMessage manaDelta)
+            {
+                // Negative change is spent mana, positive change is gained mana
+                if (manaDelta.ManaChange < 0)
+                {
+                    ManaModel.SpendMana(-manaDelta.ManaChange);
+                }
+                else
+                {
+                    ManaModel.SetCurrentMana(ManaModel.GetCurrentMana() + manaDelta.ManaChange);
                 }
             }
             else
             {
-                throw new ArgumentException($"Invalid delta type: {delta.GetType()}");
+                throw new ArgumentException($"Invalid client action type: {clientAction.GetType()}");
             }
         }
 
-
-        public override IGameMessage GenerateDelta()
+        public override void HandleInvalidClientAction(IGameMessage clientAction)
         {
-            long currentTickTime = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
-            mana.Update(currentTickTime);
-
-            return new ManaDeltaMessage(ComponentId, GameSessionId, mana.GetCurrentMana());
+            // Handle invalid client actions here
+            // For example, you might send a message to the client informing them that their action was invalid
         }
+
+        public override IGameMessage GenerateServerAction()
+        {
+            return new ManaDeltaMessage(ComponentId, GameSessionId, this.ManaModel.GetCurrentMana());
+        }
+
+
+        public override void FrequencyUpdate(int intervals)
+        {
+            // Called after a frequency update
+            Console.WriteLine("AccumulatedDeltaTime: " + this.AccumulatedDeltaTime);
+        }
+
 
         public override void Update(long deltaTime)
         {
-            // Your game specific logic goes here
-            long currentTickTime = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
-            mana.Update(currentTickTime);
+            this.ManaModel.Update(deltaTime);
         }
     }
-
 }
-

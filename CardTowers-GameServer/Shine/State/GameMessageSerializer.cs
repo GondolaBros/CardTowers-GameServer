@@ -21,7 +21,7 @@ namespace CardTowers_GameServer.Shine.State
         {
             // Write the message type, game session ID, and component ID first
             writer.Put((byte)GetMessageType(message));
-            writer.Put(message.GameSessionId.ToString());
+            writer.Put(message.GameSessionId);
             writer.Put(message.ComponentId);
 
             // Then call the message's Serialize method

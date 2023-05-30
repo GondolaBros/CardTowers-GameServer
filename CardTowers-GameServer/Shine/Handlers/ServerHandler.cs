@@ -62,6 +62,8 @@ namespace CardTowers_GameServer.Shine.Handlers
             RegisterAndSubscribe<MatchmakingMessage>(MessageChannel.System);
             RegisterAndSubscribe<GameCreatedMessage>(MessageChannel.System);
             RegisterAndSubscribe<GameEndedMessagae>(MessageChannel.System);
+
+            RegisterAndSubscribe<ManaDeltaMessage>(MessageChannel.Game);
         }
 
 
@@ -299,6 +301,7 @@ namespace CardTowers_GameServer.Shine.Handlers
         }
 
 
+
         /// <summary>
         /// This callback is invoked when a client sends a find match request. It will
         /// create matchmaking parameters based on the player, and then enqueue them into
@@ -358,12 +361,12 @@ namespace CardTowers_GameServer.Shine.Handlers
 
                     GameCreatedMessage gameCreatedMessage = new GameCreatedMessage();
                     gameCreatedMessage.ElapsedTicks = newGameSession.GetElapsedTime();
+                    logger.LogInformation("Elapsed ticks: " + gameCreatedMessage.ElapsedTicks);
                     gameCreatedMessage.Id = newGameSession.Id;
 
                     SendMessageWPacketProcessor(gameCreatedMessage, GetPeerById(e.P1.Parameters.Id), false);
                     SendMessageWPacketProcessor(gameCreatedMessage, GetPeerById(e.P2.Parameters.Id), false);
                 }
-
                 catch (Exception ex)
                 {
                     logger.LogError("Found exception when trying to create game session: " + ex.ToString());
@@ -388,13 +391,15 @@ namespace CardTowers_GameServer.Shine.Handlers
                 this.SendMessageWPacketProcessor(gameEnded, p.Peer, false);
             }
 
-            TimeSpan elapsedSpan = new TimeSpan(gameSession.GetElapsedTime());
-            double totalSeconds = elapsedSpan.TotalSeconds;
+            double elapsedTime = TimeHelper.MillisecondsToSeconds(gameSession.GetElapsedTime());
+
+            //TimeSpan elapsedSpan = new TimeSpan(gameSession.GetElapsedTime());
+            //double totalSeconds = elapsedSpan.TotalSeconds;
 
             gameSession.Cleanup();
             gameSessionHandler.RemoveSession(gameSession);
 
-            logger.LogInformation("OnGameSessionStopped: " + gameSession.Id + " | Elapsed seconds: " + totalSeconds);
+            logger.LogInformation("OnGameSessionStopped: " + gameSession.Id + " | Elapsed seconds: " + elapsedTime);
             logger.LogInformation("Total game sessions running: " + gameSessionHandler.GetSessionCount());
         }
 

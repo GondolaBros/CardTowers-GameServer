@@ -4,7 +4,6 @@ using LiteNetLib;
 using LiteNetLib.Utils;
 using System.Collections.Generic;
 
-
 namespace CardTowers_GameServer.Shine.State
 {
     public class ComponentStateHandler
@@ -19,6 +18,7 @@ namespace CardTowers_GameServer.Shine.State
 
         public void AddStateComponent(IComponentState stateComponent, string componentId, string gameSessionId)
         {
+            Console.WriteLine("ComponentStateHandler: AddStateComponent: " + componentId + " | " + gameSessionId);
             if (StateComponents.ContainsKey(componentId))
             {
                 throw new InvalidOperationException($"A component with ID {componentId} has already been added.");
@@ -26,6 +26,11 @@ namespace CardTowers_GameServer.Shine.State
             StateComponents[componentId] = stateComponent;
             stateComponent.ComponentId = componentId;
             stateComponent.GameSessionId = gameSessionId;
+        }
+
+        public int Count()
+        {
+            return this.StateComponents.Count;
         }
 
         public void Update(long deltaTime)
@@ -36,31 +41,39 @@ namespace CardTowers_GameServer.Shine.State
             }
         }
 
-        public void SendDeltas(NetPeer clientPeer)
+
+        public void SendServerActions(NetPeer clientPeer)
         {
             NetDataWriter writer = new NetDataWriter();
 
             foreach (var pair in StateComponents)
             {
                 IComponentState stateComponent = pair.Value;
-                IGameMessage? currentDelta = stateComponent.GetCurrentDelta();
+                IGameMessage serverAction = stateComponent.GetCurrentServerAction();
 
-                if (currentDelta != null)
+                if (serverAction != null)
                 {
-                    gameMessageSerializer.Serialize(currentDelta, writer);
+                    gameMessageSerializer.Serialize(serverAction, writer);
+                    stateComponent.ResetCurrentServerAction(); // Reset the current server action after sending
                 }
             }
-
             clientPeer.Send(writer, DeliveryMethod.ReliableOrdered);
         }
 
 
-        public void ReceiveAndApplyDelta(IGameMessage delta)
+        public void ReceiveAndApplyClientAction(IGameMessage clientAction)
         {
-            string componentId = delta.ComponentId;
+            string componentId = clientAction.ComponentId;
             if (StateComponents.TryGetValue(componentId, out var component))
             {
-                component.ApplyDelta(delta);
+                if (component.IsValidClientAction(clientAction))
+                {
+                    component.ApplyClientAction(clientAction);
+                }
+                else
+                {
+                    component.HandleInvalidClientAction(clientAction);
+                }
             }
             else
             {

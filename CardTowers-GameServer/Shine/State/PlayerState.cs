@@ -16,7 +16,8 @@ namespace CardTowers_GameServer.Shine.State
 
             ManaComponent = new ManaComponent(Frequency.Moderate);
 
-            ComponentStateHandler.AddStateComponent(ManaComponent, gameSessionId, Guid.NewGuid().ToString());
+            ComponentStateHandler.AddStateComponent(ManaComponent, Guid.NewGuid().ToString(), gameSessionId);
+            Console.WriteLine("PlayerState - AddedStateComponent | Total Components: " + ComponentStateHandler.Count());
         }
 
 
